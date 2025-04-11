@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pay Bill</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Montserrat', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex">
+    <div id="sideNav" class="h-screen bg-[#12729C] text-white overflow-y-auto hide-scrollbar w-64 fixed"></div>
+    <div class="flex-1 ml-64 p-8">
+        <h1 class="text-3xl font-bold mb-4">Pay Bill Transactions</h1>
+        <div id="transactionsContainer" class="bg-white shadow-md rounded-lg overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Reference</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsBody" class="bg-white divide-y divide-gray-200">
+                    <!-- Dummy Data Row -->
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">TXN987654</td>
+                        <td class="px-6 py-4 whitespace-nowrap">999777777</td>
+                        <td class="px-6 py-4 whitespace-nowrap">50,000 GNF</td>
+                        <td class="px-6 py-4 whitespace-nowrap">CAT12345</td>
+                        <td class="px-6 py-4 whitespace-nowrap">BILL_PKG</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-green-600">Success</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="sidenav.js"></script>
+</body>
+</html>

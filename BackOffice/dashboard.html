@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: "Montserrat", sans-serif;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 50;
+        }
+        .modal-content {
+            background: white;
+            margin: 15% auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex">
+    <div id="sideNav" class="h-screen bg-[#12729C] text-white overflow-y-auto hide-scrollbar w-64 fixed"></div>
+    <div class="flex-1 ml-64 p-8">
+        <h1 class="text-3xl font-bold mb-4">Welcome to Your Dashboard</h1>
+
+        <div class="space-y-4">
+            <button id="addNewServiceBtn" class="bg-blue-500 px-6 py-2 rounded-md shadow-md drop-shadow-md text-white">
+                Add New Service
+            </button>
+            <button id="viewServicesBtn" class="bg-blue-500 px-6 py-2 rounded-md shadow-md drop-shadow-md text-white">
+                View All Services
+            </button>
+            <button id="btn" class="bg-blue-500 px-6 py-2 rounded-md shadow-md drop-shadow-md text-white">
+                Add Provider
+            </button>
+
+            <!-- Add Provider Form (Hidden Initially) -->
+            <div id="serviceForm" class="hidden mt-4 bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4">Add New Provider</h2>
+                <form id="addServiceForm">
+                    <div class="mb-4">
+                        <label for="providerName" class="block text-sm font-medium text-gray-700">Provider Name</label>
+                        <input type="text" id="providerName" name="providerName" class="w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., Electricity Co." required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="imageUrl" class="block text-sm font-medium text-gray-700">Image URL</label>
+                        <input type="url" id="imageUrl" name="imageUrl" class="w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., https://example.com/image.jpg" required>
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" id="cancelBtn" class="bg-gray-300 px-4 py-2 rounded-md text-gray-700 hover:bg-gray-400">Cancel</button>
+                        <button type="submit" class="bg-blue-500 px-4 py-2 rounded-md text-white hover:bg-blue-600">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Success Modal -->
+        <div id="successModal" class="modal">
+            <div class="modal-content">
+                <h2 class="text-xl font-bold mb-4 text-green-600">Success</h2>
+                <p id="successMessage" class="mb-4 text-gray-700">Provider added successfully!</p>
+                <button id="closeSuccessBtn" class="bg-blue-500 px-4 py-2 rounded-md text-white hover:bg-blue-600">Close</button>
+            </div>
+        </div>
+
+        <!-- Error Modal -->
+        <div id="errorModal" class="modal">
+            <div class="modal-content">
+                <h2 class="text-xl font-bold mb-4 text-red-600">Error</h2>
+                <p id="errorMessage" class="mb-4 text-gray-700">Failed to add provider</p>
+                <button id="closeErrorBtn" class="bg-blue-500 px-4 py-2 rounded-md text-white hover:bg-blue-600">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="sidenav.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get("token");
+
+            if (!token) {
+                window.location.href = "../signin.html";
+                return;
+            }
+
+            window.history.replaceState({}, document.title, "dashboard.html");
+
+            document.getElementById("logoutBtn")?.addEventListener("click", () => {
+                window.location.href = "../signin.html";
+            });
+
+            // Navigation buttons
+            document.getElementById("addNewServiceBtn").addEventListener("click", () => {
+                window.location.href = "add-service.html?token=" + token;
+            });
+
+            document.getElementById("viewServicesBtn").addEventListener("click", () => {
+                window.location.href = "services.html?token=" + token;
+            });
+
+            // Add Provider form handling
+            const btn = document.getElementById("btn");
+            const serviceForm = document.getElementById("serviceForm");
+            const addServiceForm = document.getElementById("addServiceForm");
+            const cancelBtn = document.getElementById("cancelBtn");
+            const successModal = document.getElementById("successModal");
+            const errorModal = document.getElementById("errorModal");
+            const closeSuccessBtn = document.getElementById("closeSuccessBtn");
+            const closeErrorBtn = document.getElementById("closeErrorBtn");
+
+            btn.addEventListener("click", () => {
+                serviceForm.classList.toggle("hidden");
+            });
+
+            cancelBtn.addEventListener("click", () => {
+                serviceForm.classList.add("hidden");
+                addServiceForm.reset();
+            });
+
+            closeSuccessBtn.addEventListener("click", () => {
+                successModal.style.display = "none";
+                serviceForm.classList.add("hidden");
+                addServiceForm.reset();
+            });
+
+            closeErrorBtn.addEventListener("click", () => {
+                errorModal.style.display = "none";
+            });
+
+            addServiceForm.addEventListener("submit", async (event) => {
+                event.preventDefault();
+
+                const providerName = document.getElementById("providerName").value;
+                const imageUrl = document.getElementById("imageUrl").value;
+
+                const payload = {
+                    providerName: providerName,
+                    imageUrl: imageUrl,
+                };
+
+                try {
+                    const response = await fetch(
+                        "http://45.91.171.213:9080/api/manage/bills-payment/providers/add",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${token}`,
+                            },
+                            body: JSON.stringify(payload),
+                        }
+                    );
+
+                    if (!response.ok) {
+                        let errorMessage = "Unknown error";
+                        try {
+                            const errorData = await response.json();
+                            errorMessage = errorData.message || `HTTP error! status: ${response.status}`;
+                        } catch {
+                            errorMessage = (await response.text()) || `HTTP error! status: ${response.status}`;
+                        }
+                        throw new Error(errorMessage);
+                    }
+
+                    const result = await response.json();
+                    console.log("Provider added successfully:", result);
+                    document.getElementById("successMessage").textContent =
+                        result.message || "Provider added successfully!";
+                    successModal.style.display = "block";
+
+                } catch (error) {
+                    console.error("Error adding provider:", error);
+                    document.getElementById("errorMessage").textContent = `Failed to add provider: ${error.message}`;
+                    errorModal.style.display = "block";
+                }
+            });
+        });
+    </script>
+</body>
+</html>

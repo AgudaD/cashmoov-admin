@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Money Transactions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Montserrat', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex">
+    <div id="sideNav" class="h-screen bg-[#12729C] text-white overflow-y-auto hide-scrollbar w-64 fixed"></div>
+    <div class="flex-1 ml-64 p-8">
+        <h1 class="text-3xl font-bold mb-4">Remittance Transactions</h1>
+        <div id="transactionsContainer" class="bg-white shadow-md rounded-lg overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Currency</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Provider</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsBody" class="bg-white divide-y divide-gray-200"></tbody>
+            </table>
+        </div>
+        <div id="errorMessage" class="text-red-500 mt-4 hidden"></div>
+    </div>
+
+    <script src="sidenav.js"></script>
+    <script>
+        async function fetchTransactions() {
+            const transactionsBody = document.getElementById('transactionsBody');
+            const errorMessage = document.getElementById('errorMessage');
+            const token = localStorage.getItem('adminToken');
+
+            if (!token) {
+                window.location.href = '../signin.html';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://45.91.171.213:9080/api/manage/bills-payment/transactions', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    let errorMessageText = 'Unknown error';
+                    try {
+                        const errorData = await response.json();
+                        errorMessageText = errorData.message || `HTTP error! status: ${response.status}`;
+                    } catch {
+                        errorMessageText = await response.text() || `HTTP error! status: ${response.status}`;
+                    }
+                    throw new Error(errorMessageText);
+                }
+
+                const result = await response.json();
+                console.log('Transactions response:', result);
+
+                // Handle different response structures
+                const transactions = Array.isArray(result) ? result : (result.data || []);
+                
+                if (!transactions.length) {
+                    transactionsBody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center">No transactions found</td></tr>';
+                    return;
+                }
+
+                transactionsBody.innerHTML = '';
+                transactions.forEach(transaction => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">${transaction.transactionId || transaction.id || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${transaction.amount || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${transaction.currency || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${new Date(transaction.createdAt).toLocaleString() || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${transaction.providerName || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap ${transaction.status === 'Success' ? 'text-green-500' : 'text-red-500'}">${transaction.status || 'N/A'}</td>
+                    `;
+                    transactionsBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching transactions:', error);
+                errorMessage.textContent = `Error fetching transactions: ${error.message}`;
+                errorMessage.classList.remove('hidden');
+                transactionsBody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center">Failed to load transactions</td></tr>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchTransactions();
+
+            document.getElementById('logoutBtn')?.addEventListener('click', () => {
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('username');
+                window.location.href = '../signin.html';
+            });
+        });
+    </script>
+</body>
+</html>

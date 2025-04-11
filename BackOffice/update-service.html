@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Service</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Montserrat', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex">
+    <div id="sideNav" class="h-screen bg-[#12729C] text-white overflow-y-auto hide-scrollbar w-64 fixed"></div>
+    <div class="flex-1 ml-64 p-8">
+        <h1 class="text-3xl font-bold mb-4">Update Service</h1>
+
+        <div class="bg-white p-6 rounded-lg shadow-md max-w-2xl">
+            <form id="updateServiceForm">
+                <div class="mb-4">
+                    <label for="id" class="block text-sm font-medium text-gray-700">Service ID</label>
+                    <input type="number" id="id" name="id" class="w-full p-2 border border-gray-300 rounded-md bg-gray-100" readonly>
+                </div>
+                <div class="mb-4">
+                    <label for="name" class="block text-sm font-medium text-gray-700">Service Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="name" name="name" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#12729C]" required>
+                </div>
+                <div class="mb-4">
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description <span class="text-red-500">*</span></label>
+                    <textarea id="description" name="description" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#12729C]" required></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="serviceType" class="block text-sm font-medium text-gray-700">Service Type <span class="text-red-500">*</span></label>
+                    <select id="serviceType" name="serviceType" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#12729C]" required>
+                        <option value="" disabled>Select a type</option>
+                        <option value="Remittance">Remittance</option>
+                        <option value="BillPayment">Bill Payment</option>
+                        <option value="Recharge">Recharge</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="channelTypeCode" class="block text-sm font-medium text-gray-700">Channel Type Code <span class="text-red-500">*</span></label>
+                    <input type="text" id="channelTypeCode" name="channelTypeCode" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#12729C]" required>
+                </div>
+                <div class="mb-4">
+                    <label for="serviceCode" class="block text-sm font-medium text-gray-700">Service Code <span class="text-red-500">*</span></label>
+                    <input type="text" id="serviceCode" name="serviceCode" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#12729C]" required>
+                </div>
+                <div class="mb-4">
+                    <label for="serviceCategoryCode" class="block text-sm font-medium text-gray-700">Service Category Code <span class="text-red-500">*</span></label>
+                    <input type="text" id="serviceCategoryCode" name="serviceCategoryCode" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#12729C]" required>
+                </div>
+                <div class="mb-4">
+                    <label for="serviceProviderCode" class="block text-sm font-medium text-gray-700">Service Provider Code <span class="text-red-500">*</span></label>
+                    <input type="text" id="serviceProviderCode" name="serviceProviderCode" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#12729C]" required>
+                </div>
+                <div class="mb-4">
+                    <label for="countryCode" class="block text-sm font-medium text-gray-700">Country Code <span class="text-red-500">*</span></label>
+                    <input type="text" id="countryCode" name="countryCode" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#12729C]" required>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" id="cancelBtn" class="bg-gray-300 px-4 py-2 rounded-md text-gray-700">Cancel</button>
+                    <button type="submit" id="submitBtn" class="bg-[#12729C] px-4 py-2 rounded-md text-white">Update</button>
+                </div>
+            </form>
+            <p id="errorMessage" class="text-red-500 mt-4 hidden"></p>
+            <p id="successMessage" class="text-green-500 mt-4 hidden"></p>
+        </div>
+    </div>
+
+    <script src="sidenav.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            const serviceId = urlParams.get('id');
+
+            if (!token || !serviceId) {
+                window.location.href = '../signin.html';
+                return;
+            }
+
+            window.history.replaceState({}, document.title, `update-service.html?token=${token}&id=${serviceId}`);
+
+            const updateServiceForm = document.getElementById('updateServiceForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+
+            document.getElementById('logoutBtn')?.addEventListener('click', () => {
+                window.location.href = '../signin.html';
+            });
+
+            // Fetch service details using /services/{id}
+            let service;
+            try {
+                const response = await fetch(`http://45.91.171.213:9080/api/manage/services/${serviceId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch service: ${response.status}`);
+                }
+
+                const responseData = await response.json();
+                console.log('Raw GET response:', responseData);
+
+                // Handle potential nesting (e.g., { "data": {...} })
+                service = responseData.data || responseData;
+
+                if (!service.id) {
+                    throw new Error('Service ID not found in response');
+                }
+
+                // Pre-populate form
+                document.getElementById('id').value = service.id;
+                document.getElementById('name').value = service.name || '';
+                document.getElementById('description').value = service.description || '';
+                document.getElementById('serviceType').value = service.serviceType || '';
+                document.getElementById('channelTypeCode').value = service.channelTypeCode || '';
+                document.getElementById('serviceCode').value = service.serviceCode || '';
+                document.getElementById('serviceCategoryCode').value = service.serviceCategoryCode || '';
+                document.getElementById('serviceProviderCode').value = service.serviceProviderCode || '';
+                document.getElementById('countryCode').value = service.countryCode || '';
+
+            } catch (error) {
+                console.error('Error fetching service:', error);
+                errorMessage.textContent = error.message;
+                errorMessage.classList.remove('hidden');
+                submitBtn.disabled = true;
+                return;
+            }
+
+            // Handle form submission
+            updateServiceForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const formData = new FormData(updateServiceForm);
+                const payload = {
+                    id: parseInt(formData.get('id')),
+                    name: formData.get('name'),
+                    description: formData.get('description'),
+                    serviceType: formData.get('serviceType'),
+                    channelTypeCode: formData.get('channelTypeCode'),
+                    serviceCode: formData.get('serviceCode'),
+                    serviceCategoryCode: formData.get('serviceCategoryCode'),
+                    serviceProviderCode: formData.get('serviceProviderCode'),
+                    countryCode: formData.get('countryCode'),
+                    createAt: service.createAt || new Date().toISOString(), // Preserve or set default
+                    createdBy: service.createdBy || 0,
+                    updatedAt: new Date().toISOString(), // Update timestamp
+                    updatedBy: service.updatedBy || 0
+                };
+
+                if (isNaN(payload.id)) {
+                    errorMessage.textContent = 'Invalid Service ID';
+                    errorMessage.classList.remove('hidden');
+                    return;
+                }
+
+                console.log('Sending PUT payload:', payload);
+
+                submitBtn.textContent = 'Updating...';
+                submitBtn.disabled = true;
+                errorMessage.classList.add('hidden');
+                successMessage.classList.add('hidden');
+
+                try {
+                    const response = await fetch('http://45.91.171.213:9080/api/manage/services/update', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        let errorText = 'Failed to update service';
+                        try {
+                            const errorData = await response.json();
+                            errorText = errorData.message || `HTTP error! status: ${response.status}`;
+                        } catch {
+                            errorText = await response.text() || `HTTP error! status: ${response.status}`;
+                        }
+                        throw new Error(errorText);
+                    }
+
+                    const text = await response.text();
+                    let result;
+                    try {
+                        result = text ? JSON.parse(text) : {};
+                    } catch {
+                        result = { message: text || 'Service updated (no JSON response)' };
+                    }
+                    console.log('Service updated successfully:', result);
+                    successMessage.textContent = result.message || 'Service updated successfully!';
+                    successMessage.classList.remove('hidden');
+
+                } catch (error) {
+                    console.error('Error updating service:', error);
+                    errorMessage.textContent = error.message;
+                    errorMessage.classList.remove('hidden');
+                } finally {
+                    submitBtn.textContent = 'Update';
+                    submitBtn.disabled = false;
+                }
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                window.location.href = 'services.html?token=' + token;
+            });
+        });
+    </script>
+</body>
+</html>

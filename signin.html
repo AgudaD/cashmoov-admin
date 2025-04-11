@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Montserrat', sans-serif; }
+    </style>
+</head>  
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md w-96">
+        <h1 class="text-2xl font-bold mb-6 text-center">Admin Portal Sign In</h1>
+        <form id="signinForm">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="username">Username</label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="username" type="text" placeholder="Username" required>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="password">Password</label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="password" type="password" placeholder="Password" required>
+            </div>
+            <button class="w-full bg-[#12729C] text-white py-2 px-4 rounded hover:bg-[#0f5c80]" type="submit">Sign In</button>
+            <p id="errorMessage" class="text-red-500 mt-4 text-center hidden"></p>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('signinForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+
+            try {
+                const response = await fetch('http://45.91.171.213:9080/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                    credentials: 'include' 
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Login response:', result);
+
+                if (result.token && result.token.token) {
+                    // Get redirect URL from query params, default to dashboard
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirectPath = urlParams.get('redirect') || 'BackOffice/dashboard.html';
+                    const redirectUrl = new URL(redirectPath, window.location.origin);
+                    redirectUrl.searchParams.set('token', result.token.token);
+                    window.location.href = redirectUrl.href;
+                } else {
+                    throw new Error('Login failed: No token received');
+                }
+            } catch (error) {
+                console.error('Sign-in error:', error);
+                errorMessage.textContent = error.message;
+                errorMessage.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
