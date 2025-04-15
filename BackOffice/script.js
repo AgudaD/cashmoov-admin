@@ -1,1912 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Management</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      body {
-        font-family: "Montserrat", sans-serif;
-        margin: 0;
-        overflow-x: hidden;
-      }
-
-      /* Hide Scrollbar */
-      .hide-scrollbar::-webkit-scrollbar {
-        display: none;
-      }
-      .hide-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-      }
-
-      /* Sidebar */
-      #sideNav {
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100vh;
-        width: 16rem;
-        z-index: 100;
-      }
-
-      /* Main Content */
-      .main-content {
-        margin-left: 16rem;
-        padding: 2rem;
-        overflow-x: auto;
-        height: 100vh;
-      }
-
-      /* Table Container */
-      .table-container {
-        overflow-x: auto;
-        max-width: 100%;
-      }
-
-      /* Modal */
-      .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 150;
-        overflow-y: auto;
-      }
-      .modal-content {
-        background: white;
-        margin: 5% auto;
-        padding: 20px;
-        width: 90%;
-        max-width: 500px;
-        max-height: 80vh;
-        overflow-y: auto;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      }
-
-      /* Action Button (used in Transactions, now for Billers/Categories too) */
-      .actionBtn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: #6b7280; /* Tailwind gray-500 */
-        transition: color 0.2s ease;
-      }
-      .actionBtn:hover {
-        color: #1f2937; /* Tailwind gray-800 */
-      }
-
-      /* Dropdown Menu (shared across all sections) */
-      .dropdown-menu {
-        display: none;
-        position: absolute;
-        background: red;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        z-index: 200;
-        min-width: 120px;
-      }
-      .dropdown-menu button {
-        display: block;
-        width: 100%;
-        text-align: left;
-        padding: 8px 12px;
-        background: none;
-        border: none;
-        font-size: 14px;
-        color: #374151; /* Tailwind gray-700 */
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-      }
-      .dropdown-menu button:hover {
-        background: #f0f0f0; /* Light gray hover */
-      }
-      /* Existing .dropdown-menu styles are fine, no change needed */
-      .action-menu {
-        position: relative;
-        display: inline-block;
-      }
-
-      .action-icon {
-        cursor: pointer;
-        font-size: 20px; /* Adjust size of the ellipsis */
-        color: #6b7280; /* Tailwind gray-500 */
-      }
-
-      .action-icon:hover {
-        color: #1f2937; /* Tailwind gray-800 */
-      }
-    </style>
-  </head>
-  <body class="bg-gray-100 h-screen flex">
-    <div
-      id="sideNav"
-      class="h-screen bg-[#12729C] text-white overflow-y-auto hide-scrollbar w-64 fixed"
-    ></div>
-    <div class="main-content flex-1">
-      <h1 class="text-3xl font-bold mb-6">Management</h1>
-
-      <!-- Tabs -->
-      <div class="flex border-b mb-4">
-        <button
-          id="billsPaymentTab"
-          class="px-4 py-2 font-semibold text-gray-700 border-b-2 border-blue-500"
-        >
-          Bills Payment
-        </button>
-        <button
-          id="clientManagementTab"
-          class="px-4 py-2 font-semibold text-gray-700"
-        >
-          Client Management
-        </button>
-        <button
-          id="productManagementTab"
-          class="px-4 py-2 font-semibold text-gray-700"
-        >
-          Product Management
-        </button>
-        <button
-          id="userManagementTab"
-          class="px-4 py-2 font-semibold text-gray-700"
-        >
-          User Management
-        </button>
-      </div>
-
-      <!-- Bills Payment Tab Content -->
-      <div id="billsPaymentContent" class="tab-content">
-        <h2 class="text-xl font-semibold mb-4">Bills Payment</h2>
-        <div class="p-6">
-          <div class="flex justify-between items-center mb-4">
-            <!-- Left: Transactions Dropdown -->
-            <div>
-              <label
-                for="billsPaymentDropdown"
-                class="block text-sm font-medium text-gray-700"
-                >Select Data</label
-              >
-              <select
-                id="billsPaymentDropdown"
-                class="mt-1 block w-48 p-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              >
-                <option value="transactions">Transactions</option>
-                <option value="providers">Providers</option>
-                <option value="categories">Categories</option>
-                <option value="billers" selected>Billers</option>
-                <option value="configuration">Configuration</option>
-              </select>
-            </div>
-            <!-- Right: Filter, Retry Icons, and Add New Button -->
-            <div class="flex items-center space-x-4">
-              <div
-                id="transactionsControls"
-                class="flex items-center space-x-6 hidden"
-              >
-                <button
-                  id="toggleFilterBtn"
-                  class="text-gray-500 hover:text-gray-700 flex items-center gap-3"
-                >
-                  <p class="capitalize text-lg">filter</p>
-                  <img
-                    src="https://res.cloudinary.com/dgqyobxzg/image/upload/v1744191977/faders-icon_ydtv8d.png"
-                    alt="filter transactions"
-                    class="w-6 h-auto"
-                  />
-                </button>
-                <button
-                  id="retryFetchTransactions"
-                  class="text-gray-500 hover:text-gray-700 flex items-center gap-3"
-                >
-                  <p class="capitalize text-lg">refresh</p>
-                  <img
-                    src="https://res.cloudinary.com/dgqyobxzg/image/upload/v1744191985/retry-icon_oyxvmc.png"
-                    alt="refresh transactions"
-                    class="w-6 h-auto"
-                  />
-                </button>
-              </div>
-              <button
-                id="addBillsPaymentBtn"
-                class="bg-[#12729C] px-4 py-2 rounded-md text-white hover:bg-[#0f5c80] hidden"
-              >
-                Add New
-              </button>
-            </div>
-          </div>
-          <!-- New Transactions Tabs -->
-          <div id="transactionsTabs" class="flex border-b mb-4 hidden">
-            <button
-              id="standardTab"
-              class="px-4 py-2 font-semibold text-gray-700 border-b-2 border-blue-500"
-            >
-              Standard
-            </button>
-            <button
-              id="detailedRemittanceTab"
-              class="px-4 py-2 font-semibold text-gray-700"
-            >
-              Remittance
-            </button>
-          </div>
-
-          <!-- Filter Form (Only for Transactions, Hidden by Default) -->
-          <div id="transactionsFilterContainer" class="hidden mb-4">
-            <form
-              id="billsPaymentFilterForm"
-              class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-4 rounded-md shadow-md"
-            >
-              <div>
-                <label
-                  for="categoryId"
-                  class="block text-sm font-medium text-gray-700"
-                  >Category Name</label
-                >
-                <input
-                  type="text"
-                  id="categoryId"
-                  name="categoryName"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0"
-                />
-              </div>
-              <div>
-                <label
-                  for="providerName"
-                  class="block text-sm font-medium text-gray-700"
-                  >Provider Name</label
-                >
-                <input
-                  type="text"
-                  id="providerName"
-                  name="providerName"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0"
-                />
-              </div>
-              <div>
-                <label
-                  for="agentMobileNumber"
-                  class="block text-sm font-medium text-gray-700"
-                  >Agent Mobile Number</label
-                >
-                <input
-                  type="text"
-                  id="agentMobileNumber"
-                  name="agentMobileNumber"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0"
-                />
-              </div>
-              <div>
-                <label
-                  for="countryId"
-                  class="block text-sm font-medium text-gray-700"
-                  >Country Name</label
-                >
-                <input
-                  type="text"
-                  id="countryId"
-                  name="countryName"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0"
-                />
-              </div>
-              <div>
-                <label
-                  for="workflowStatus"
-                  class="block text-sm font-medium text-gray-700"
-                  >Workflow Status</label
-                >
-                <select
-                  id="workflowStatus"
-                  name="status"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0"
-                >
-                  <option value="">All</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="COMPLETED">Completed</option>
-                  <option value="FAILED">Failed</option>
-                </select>
-              </div>
-              <div>
-                <label
-                  for="customerReference"
-                  class="block text-sm font-medium text-gray-700"
-                  >Customer Reference</label
-                >
-                <input
-                  type="text"
-                  id="customerReference"
-                  name="customerReference"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0"
-                />
-              </div>
-              <div>
-                <label
-                  for="requestDate"
-                  class="block text-sm font-medium text-gray-700"
-                  >Request Date</label
-                >
-                <input
-                  type="date"
-                  id="requestDate"
-                  name="requestDate"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0"
-                />
-              </div>
-              <div>
-                <label
-                  for="startDate"
-                  class="block text-sm font-medium text-gray-700"
-                  >Start Date</label
-                >
-                <input
-                  type="date"
-                  id="startDate"
-                  name="startDate"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0"
-                />
-              </div>
-              <div>
-                <label
-                  for="endDate"
-                  class="block text-sm font-medium text-gray-700"
-                  >End Date</label
-                >
-                <input
-                  type="date"
-                  id="endDate"
-                  name="endDate"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-0"
-                />
-              </div>
-              <div class="flex items-end gap-2">
-                <button
-                  type="submit"
-                  class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700"
-                >
-                  Filter
-                </button>
-                <button
-                  type="button"
-                  id="resetFilters"
-                  class="w-full bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
-                >
-                  Reset
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <div
-            id="billsPaymentList"
-            class="mt-4 space-y-4 table-container"
-          ></div>
-          <div
-            id="transactionsPagination"
-            class="hidden mt-4 flex justify-between items-center"
-          >
-            <button
-              id="prevTransactions"
-              class="px-4 py-2 bg-gray-500 text-white rounded-md disabled:opacity-50"
-              disabled
-            >
-              Previous
-            </button>
-            <span id="transactionsPageInfo" class="text-gray-700"></span>
-            <button
-              id="nextTransactions"
-              class="px-4 py-2 bg-gray-500 text-white rounded-md"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Client Management Tab Content -->
-      <div id="clientManagementContent" class="tab-content hidden">
-        <h2 class="text-xl font-semibold mb-4">Client Management</h2>
-        <div class="flex justify-between items-center mb-4">
-          <div>
-            <label
-              for="clientManagementDropdown"
-              class="block text-sm font-medium text-gray-700 mb-2"
-              >Select Data Type:</label
-            >
-            <select
-              id="clientManagementDropdown"
-              class="w-full max-w-xs p-2 border rounded-md"
-            >
-              <option value="clients">Clients</option>
-            </select>
-          </div>
-          <button
-            id="addClientBtn"
-            class="bg-[#12729C] px-4 py-2 rounded-md text-white hover:bg-[#0f5c80]"
-          >
-            Add New Client
-          </button>
-        </div>
-        <div id="clientManagementList" class="space-y-4"></div>
-      </div>
-
-      <!-- Product Management Tab Content -->
-      <div id="productManagementContent" class="tab-content hidden">
-        <h2 class="text-xl font-semibold mb-4">Product Management</h2>
-        <div class="flex justify-between items-center mb-4">
-          <div>
-            <label
-              for="productManagementDropdown"
-              class="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Select Data Type:
-            </label>
-            <select
-              id="productManagementDropdown"
-              class="w-full max-w-xs p-2 border rounded-md"
-            >
-              <option value="services">Services</option>
-            </select>
-          </div>
-          <button
-            id="addServiceBtn"
-            class="bg-[#12729C] px-4 py-2 rounded-md text-white hover:bg-[#0f5c80]"
-          >
-            Create New Service
-          </button>
-        </div>
-        <div id="productManagementList" class="table-container space-y-4">
-          <!-- Table will be dynamically populated here -->
-        </div>
-      </div>
-
-      <!-- User Management Tab Content -->
-      <div id="userManagementContent" class="tab-content hidden">
-        <h2 class="text-xl font-semibold mb-4">User Management</h2>
-        <div class="flex justify-between items-center mb-4">
-          <div>
-            <label
-              for="userManagementDropdown"
-              class="block text-sm font-medium text-gray-700 mb-2"
-              >Select Data Type:</label
-            >
-            <select
-              id="userManagementDropdown"
-              class="w-full max-w-xs p-2 border rounded-md"
-            >
-              <option value="users">Users</option>
-            </select>
-          </div>
-          <button
-            id="addUserBtn"
-            class="bg-[#12729C] px-4 py-2 rounded-md text-white hover:bg-[#0f5c80]"
-          >
-            Add New User
-          </button>
-        </div>
-        <div id="userManagementList" class="space-y-4"></div>
-      </div>
-
-      <!-- Add User Modal -->
-      <div id="addUserModal" class="modal">
-        <div class="modal-content">
-          <h2 class="text-xl font-bold mb-4">Add New User</h2>
-          <form id="addUserForm">
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Email Address <span class="text-red-500">*</span></label
-              >
-              <input
-                type="email"
-                id="userEmailAddress"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Phone Number <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="userPhoneNumber"
-                class="w-full p-2 border rounded-md"
-                placeholder="+1234567890"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >First Name <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="userFirstName"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Last Name <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="userLastName"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Address <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="userAddress"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >City</label
-              >
-              <input
-                type="text"
-                id="userCity"
-                class="w-full p-2 border rounded-md"
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >State</label
-              >
-              <input
-                type="text"
-                id="userState"
-                class="w-full p-2 border rounded-md"
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Country</label
-              >
-              <input
-                type="text"
-                id="userCountry"
-                class="w-full p-2 border rounded-md"
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Role</label
-              >
-              <select id="userRole" class="w-full p-2 border rounded-md">
-                <option value="">Select Role</option>
-                <option value="ROLE_USER">User</option>
-                <option value="ROLE_ADMIN">Admin</option>
-              </select>
-            </div>
-            <div class="flex justify-end space-x-2">
-              <button
-                type="button"
-                id="cancelAddUserBtn"
-                class="bg-gray-300 px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="bg-[#12729C] px-4 py-2 rounded-md text-white"
-              >
-                Submit
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Add Provider Modal -->
-      <div
-        id="addProviderModal"
-        class="modal fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden"
-      >
-        <div
-          class="modal-content bg-white p-6 rounded-md shadow-md w-full max-w-md"
-        >
-          <h2 class="text-xl font-bold mb-4">Add Provider</h2>
-          <form id="addProviderForm">
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Provider Name <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="addProviderName"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Image URL
-              </label>
-              <input
-                type="url"
-                id="providerImage"
-                class="w-full p-2 border rounded-md"
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Service Type <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="serviceType"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled selected>
-                  Select a service type
-                </option>
-                <option value="BillsPayment">Bills Payment</option>
-                <option value="Remit">Remittance</option>
-              </select>
-            </div>
-            <div class="flex justify-end space-x-2">
-              <button
-                type="button"
-                id="cancelAddProviderBtn"
-                class="bg-gray-300 px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="bg-[#12729C] px-4 py-2 rounded-md text-white"
-              >
-                Submit
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Add Category Modal -->
-      <div id="addCategoryModal" class="modal">
-        <div class="modal-content">
-          <h2 class="text-xl font-bold mb-4">Add Category</h2>
-          <form id="addCategoryForm">
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Category Name <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="categoryName"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Description <span class="text-red-500">*</span></label
-              >
-              <textarea
-                id="categoryDescription"
-                class="w-full p-2 border rounded-md"
-                required
-              ></textarea>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Customer Validation Required
-                <span class="text-red-500">*</span></label
-              >
-              <input
-                type="checkbox"
-                id="customerValidationRequired"
-                class="p-2"
-              />
-            </div>
-            <div class="flex justify-end space-x-2">
-              <button
-                type="button"
-                id="cancelAddCategoryBtn"
-                class="bg-gray-300 px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="bg-[#12729C] px-4 py-2 rounded-md text-white"
-              >
-                Submit
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Update Category Modal -->
-      <div id="updateCategoryModal" class="modal">
-        <div class="modal-content">
-          <h2 class="text-xl font-bold mb-4">Update Category</h2>
-          <form id="updateCategoryForm">
-            <input type="hidden" id="updateCategoryId" />
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Category Name <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="updateCategoryName"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Description <span class="text-red-500">*</span></label
-              >
-              <textarea
-                id="updateCategoryDescription"
-                class="w-full p-2 border rounded-md"
-                required
-              ></textarea>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Customer Validation Required
-                <span class="text-red-500">*</span></label
-              >
-              <input
-                type="checkbox"
-                id="updateCustomerValidationRequired"
-                class="p-2"
-              />
-            </div>
-            <div class="flex justify-end space-x-2">
-              <button
-                type="button"
-                id="cancelUpdateCategoryBtn"
-                class="bg-gray-300 px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="bg-[#12729C] px-4 py-2 rounded-md text-white"
-              >
-                Update
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Add Biller Modal -->
-      <div id="addBillerModal" class="modal">
-        <div class="modal-content">
-          <h2 class="text-xl font-bold mb-4">Add Biller</h2>
-          <form id="addBillerForm">
-            <div class="mb-4">
-              <label
-                for="billerServiceId"
-                class="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Service ID <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="billerServiceId"
-                class="w-full p-2 border rounded-md"
-                required
-                placeholder="Enter unique service ID"
-              />
-            </div>
-
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Provider ID <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="billerProviderId"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled selected>Select a provider</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="hidden text-sm font-medium text-gray-700">
-                Operator ID <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="billerOperatorId"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled selected>Select an operator</option>
-                <!-- Static options until endpoint provided -->
-                <option value="OP1">Operator 1</option>
-                <option value="OP2">Operator 2</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Name <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="billerName"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Category ID <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="billerCategoryId"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled selected>Select a category</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Item Type <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="billerItemType"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled selected>Select an item type</option>
-                <option value="ProviderBaseBouquet">
-                  Provider Base Bouquet
-                </option>
-                <option value="Regular">Regular</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Description <span class="text-red-500">*</span>
-              </label>
-              <textarea
-                id="billerDescription"
-                class="w-full p-2 border rounded-md"
-                required
-              ></textarea>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Country ID <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="billerCountryId"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled selected>Select a country</option>
-                <!-- Static options until endpoint provided -->
-                <option value="1">Nigeria (1)</option>
-                <option value="2">Ghana (2)</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Min Amount <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="billerMinAmount"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Max Amount <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="billerMaxAmount"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="flex justify-end space-x-2">
-              <button
-                type="button"
-                id="cancelAddBillerBtn"
-                class="bg-gray-300 px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="bg-[#12729C] px-4 py-2 rounded-md text-white"
-              >
-                Submit
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Update Biller Modal -->
-      <div id="updateBillerModal" class="modal">
-        <div class="modal-content">
-          <h2 class="text-xl font-bold mb-4">Update Biller</h2>
-          <form id="updateBillerForm">
-            <input type="hidden" id="updateBillerId" />
-            <div class="mb-4">
-              <label
-                for="updateBillerServiceId"
-                class="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Service ID <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="updateBillerServiceId"
-                class="w-full p-2 border rounded-md"
-                required
-                placeholder="Enter unique service ID"
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Provider ID <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="updateBillerProviderId"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled>Select a provider</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Operator ID <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="updateBillerOperatorId"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled>Select an operator</option>
-                <!-- Static options until endpoint provided -->
-                <option value="OP1">Operator 1</option>
-                <option value="OP2">Operator 2</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Name <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="updateBillerName"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Category ID <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="updateBillerCategoryId"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled>Select a category</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Item Type <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="updateBillerItemType"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled selected>Select an item type</option>
-                <option value="ProviderBaseBouquet">
-                  Provider Base Bouquet
-                </option>
-                <option value="Regular">Regular</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Description <span class="text-red-500">*</span>
-              </label>
-              <textarea
-                id="updateBillerDescription"
-                class="w-full p-2 border rounded-md"
-                required
-              ></textarea>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Country ID <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="updateBillerCountryId"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled>Select a country</option>
-                <!-- Static options until endpoint provided -->
-                <option value="1">Nigeria (1)</option>
-                <option value="2">Ghana (2)</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Min Amount <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="updateBillerMinAmount"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">
-                Max Amount <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="updateBillerMaxAmount"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="flex justify-end space-x-2">
-              <button
-                type="button"
-                id="cancelUpdateBillerBtn"
-                class="bg-gray-300 px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="bg-[#12729C] px-4 py-2 rounded-md text-white"
-              >
-                Update
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Add Configuration Modal -->
-      <div id="addConfigurationModal" class="modal hidden">
-        <div class="modal-content max-w-lg">
-          <h2 class="text-xl font-bold mb-4">Add New Fee Configuration</h2>
-          <form id="addConfigurationForm">
-            <div class="mb-4">
-              <label
-                for="feeName"
-                class="block text-sm font-medium text-gray-700"
-                >Fee Name <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="feeName"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label
-                for="feeDescription"
-                class="block text-sm font-medium text-gray-700"
-                >Fee Description <span class="text-red-500">*</span></label
-              >
-              <textarea
-                id="feeDescription"
-                class="w-full p-2 border rounded-md"
-                required
-              ></textarea>
-            </div>
-            <div class="mb-4">
-              <label
-                for="feeAmount"
-                class="block text-sm font-medium text-gray-700"
-                >Fee Amount <span class="text-red-500">*</span></label
-              >
-              <input
-                type="number"
-                id="feeAmount"
-                step="0.01"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label
-                for="feeCurrency"
-                class="block text-sm font-medium text-gray-700"
-                >Fee Currency <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="feeCurrency"
-                class="w-full p-2 border rounded-md"
-                required
-                placeholder="e.g., USD"
-              />
-            </div>
-            <div class="mb-4">
-              <label
-                for="providerId"
-                class="block text-sm font-medium text-gray-700"
-                >Provider <span class="text-red-500">*</span></label
-              >
-              <select
-                id="providerId"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled selected>Select a provider</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label
-                for="configCategoryId"
-                class="block text-sm font-medium text-gray-700"
-                >Category <span class="text-red-500">*</span></label
-              >
-              <select
-                id="configCategoryId"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled selected>Select a category</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label
-                for="taxRate"
-                class="block text-sm font-medium text-gray-700"
-                >Tax Rate (%)</label
-              >
-              <input
-                type="number"
-                id="taxRate"
-                step="0.01"
-                class="w-full p-2 border rounded-md"
-                placeholder="e.g., 5.00"
-              />
-            </div>
-            <div class="flex justify-end space-x-2">
-              <button
-                type="button"
-                id="cancelAddConfigurationBtn"
-                class="bg-gray-300 px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="bg-[#12729C] px-4 py-2 rounded-md text-white"
-              >
-                Submit
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Add Client Modal -->
-      <div id="addClientModal" class="modal">
-        <div class="modal-content">
-          <h2 class="text-xl font-bold mb-4">Add Client Service</h2>
-          <form id="addClientForm">
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Entity ID <span class="text-red-500">*</span></label
-              >
-              <input
-                type="number"
-                id="clientEntityId"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Application ID <span class="text-red-500">*</span></label
-              >
-              <input
-                type="number"
-                id="clientApplicationId"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Status <span class="text-red-500">*</span></label
-              >
-              <select
-                id="clientStatus"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="ACTIVE">Active</option>
-                <option value="INACTIVE">Inactive</option>
-              </select>
-            </div>
-            <div class="flex justify-end space-x-2">
-              <button
-                type="button"
-                id="cancelAddClientBtn"
-                class="bg-gray-300 px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="bg-[#12729C] px-4 py-2 rounded-md text-white"
-              >
-                Submit
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Update Client Modal -->
-      <div
-        id="updateClientModal"
-        class="modal hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center"
-      >
-        <div class="modal-content bg-white p-6 rounded-lg w-full max-w-md">
-          <h2 class="text-xl font-semibold mb-4">Update Client Service</h2>
-          <form id="updateClientForm">
-            <input type="hidden" id="updateClientId" name="id" />
-            <div class="mb-4">
-              <label
-                for="updateClientName"
-                class="block text-sm font-medium text-gray-700"
-                >Name *</label
-              >
-              <input
-                type="text"
-                id="updateClientName"
-                name="name"
-                required
-                class="w-full p-2 border rounded-md"
-              />
-            </div>
-            <div class="mb-4">
-              <label
-                for="updateClientDescription"
-                class="block text-sm font-medium text-gray-700"
-                >Description</label
-              >
-              <textarea
-                id="updateClientDescription"
-                name="description"
-                class="w-full p-2 border rounded-md"
-              ></textarea>
-            </div>
-            <div class="mb-4">
-              <label
-                for="updateClientCountry"
-                class="block text-sm font-medium text-gray-700"
-                >Country</label
-              >
-              <input
-                type="text"
-                id="updateClientCountry"
-                name="country"
-                class="w-full p-2 border rounded-md"
-              />
-            </div>
-            <div class="mb-4">
-              <label
-                for="updateClientStatus"
-                class="block text-sm font-medium text-gray-700"
-                >Status *</label
-              >
-              <select
-                id="updateClientStatus"
-                name="status"
-                required
-                class="w-full p-2 border rounded-md"
-              >
-                <option value="Active">Active</option>
-                <option value="Disabled">Disabled</option>
-                <option value="Suspended">Suspended</option>
-              </select>
-            </div>
-            <div class="flex justify-end space-x-2">
-              <button
-                type="button"
-                onclick="hideModal('updateClientModal')"
-                class="px-4 py-2 bg-gray-500 text-white rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="px-4 py-2 bg-[#12729C] text-white rounded-md"
-              >
-                Update
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- delete user modal -->
-      <div
-        id="deleteClientModal"
-        class="modal hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center"
-      >
-        <div class="modal-content bg-white p-6 rounded-lg w-full max-w-sm">
-          <h2 class="text-xl font-semibold mb-4">Confirm Delete</h2>
-          <p class="mb-4">
-            Are you sure you want to delete this client service?
-          </p>
-          <input type="hidden" id="deleteClientId" />
-          <div class="flex justify-end space-x-2">
-            <button
-              type="button"
-              onclick="hideModal('deleteClientModal')"
-              class="px-4 py-2 bg-gray-500 text-white rounded-md"
-            >
-              Cancel
-            </button>
-            <button
-              id="confirmDeleteClientBtn"
-              class="px-4 py-2 bg-red-600 text-white rounded-md"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Add Service Modal -->
-      <div id="addServiceModal" class="modal">
-        <div class="modal-content">
-          <h2 class="text-xl font-bold mb-4">Create New Service</h2>
-          <form id="addServiceForm">
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Service Name <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="serviceName"
-                name="name"
-                class="w-full p-2 border rounded-md"
-                placeholder="e.g., Money Transfer"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Service Description <span class="text-red-500">*</span></label
-              >
-              <textarea
-                id="serviceDescription"
-                name="description"
-                class="w-full p-2 border rounded-md"
-                placeholder="e.g., This service allows sending money."
-                required
-              ></textarea>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Service Type <span class="text-red-500">*</span></label
-              >
-              <select
-                id="serviceType"
-                name="serviceType"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled selected>Select a type</option>
-                <option value="BillPayment">Bill Payment</option>
-                <option value="Remittance">Remittance</option>
-                <option value="CashOut">Cash Out</option>
-                <option value="CashIn">Cash In</option>
-                <option value="Offline">Offline</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Channel Type Code <span class="text-red-500">*</span></label
-              >
-              <select
-                id="channelTypeCode"
-                name="channelTypeCode"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled selected>Select a channel</option>
-                <option value="WEB">WEB</option>
-                <option value="USSD">USSD</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Service Code <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="serviceCode"
-                name="serviceCode"
-                class="w-full p-2 border rounded-md"
-                placeholder="e.g., 1001"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Service Category Code
-                <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="serviceCategoryCode"
-                name="serviceCategoryCode"
-                class="w-full p-2 border rounded-md"
-                placeholder="e.g., Finance"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Service Provider Code
-                <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="serviceProviderCode"
-                name="serviceProviderCode"
-                class="w-full p-2 border rounded-md"
-                placeholder="e.g., PROV123"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Country Code <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="countryCode"
-                name="countryCode"
-                class="w-full p-2 border rounded-md"
-                placeholder="e.g., NG"
-                required
-              />
-            </div>
-            <div class="flex justify-end space-x-2">
-              <button
-                type="button"
-                id="cancelAddServiceBtn"
-                class="bg-gray-300 px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="bg-[#12729C] px-4 py-2 rounded-md text-white"
-              >
-                Submit
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Update Service Modal -->
-      <div id="updateServiceModal" class="modal">
-        <div class="modal-content">
-          <h2 class="text-xl font-bold mb-4">Update Service</h2>
-          <form id="updateServiceForm">
-            <input type="hidden" id="updateServiceId" />
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Service Name <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="updateServiceName"
-                name="name"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Service Description <span class="text-red-500">*</span></label
-              >
-              <textarea
-                id="updateServiceDescription"
-                name="description"
-                class="w-full p-2 border rounded-md"
-                required
-              ></textarea>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Service Type <span class="text-red-500">*</span></label
-              >
-              <select
-                id="updateServiceType"
-                name="serviceType"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="BillPayment">Bill Payment</option>
-                <option value="Remittance">Remittance</option>
-                <option value="CashOut">Cash Out</option>
-                <option value="CashIn">Cash In</option>
-                <option value="Offline">Offline</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Channel Type Code <span class="text-red-500">*</span></label
-              >
-              <select
-                id="updateChannelTypeCode"
-                name="channelTypeCode"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="WEB">WEB</option>
-                <option value="USSD">USSD</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Service Code <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="updateServiceCode"
-                name="serviceCode"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Service Category Code
-                <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="updateServiceCategoryCode"
-                name="serviceCategoryCode"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Service Provider Code
-                <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="updateServiceProviderCode"
-                name="serviceProviderCode"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Country Code <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="updateCountryCode"
-                name="countryCode"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="flex justify-end space-x-2">
-              <button
-                type="button"
-                id="cancelUpdateServiceBtn"
-                class="bg-gray-300 px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="bg-[#12729C] px-4 py-2 rounded-md text-white"
-              >
-                Update
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Add User Modal -->
-      <div id="addUserModal" class="modal">
-        <div class="modal-content">
-          <h2 class="text-xl font-bold mb-4">Add New User</h2>
-          <form id="addUserForm">
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Email Address <span class="text-red-500">*</span></label
-              >
-              <input
-                type="email"
-                id="userEmailAddress"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Phone Number <span class="text-red-500">*</span></label
-              >
-              <input
-                type="tel"
-                id="userPhoneNumber"
-                class="w-full p-2 border rounded-md"
-                required
-                placeholder="+1234567890"
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >First Name <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="userFirstName"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Last Name <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="userLastName"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Address <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="userAddress"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >City <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="userCity"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >State <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="userState"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Country <span class="text-red-500">*</span></label
-              >
-              <input
-                type="text"
-                id="userCountry"
-                class="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Role <span class="text-red-500">*</span></label
-              >
-              <select
-                id="userRole"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="" disabled selected>Select a role</option>
-                <option value="ROLE_ADMIN">Admin</option>
-                <option value="ROLE_USER">User</option>
-              </select>
-            </div>
-            <div class="flex justify-end space-x-2">
-              <button
-                type="button"
-                id="cancelAddUserBtn"
-                class="bg-gray-300 px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="bg-[#12729C] px-4 py-2 rounded-md text-white"
-              >
-                Submit
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Update User Modal -->
-      <div id="updateUserModal" class="modal">
-        <div class="modal-content">
-          <h2 class="text-xl font-bold mb-4">Update User</h2>
-          <form id="updateUserForm">
-            <input type="hidden" id="updateUserId" />
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Email Address</label
-              >
-              <input
-                type="email"
-                id="updateUserEmailAddress"
-                class="w-full p-2 border rounded-md"
-                disabled
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Full Name</label
-              >
-              <input
-                type="text"
-                id="updateUserFullName"
-                class="w-full p-2 border rounded-md"
-                disabled
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Role</label
-              >
-              <input
-                type="text"
-                id="updateUserRole"
-                class="w-full p-2 border rounded-md"
-                disabled
-              />
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700"
-                >Action <span class="text-red-500">*</span></label
-              >
-              <select
-                id="updateUserAction"
-                class="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="ACTIVATE">Activate</option>
-                <option value="DEACTIVATE">Deactivate</option>
-              </select>
-            </div>
-            <div class="flex justify-end space-x-2">
-              <button
-                type="button"
-                id="cancelUpdateUserBtn"
-                class="bg-gray-300 px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="bg-[#12729C] px-4 py-2 rounded-md text-white"
-              >
-                Update
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Complete Transaction Modal -->
-      <div id="completeTransactionModal" class="modal">
-        <div class="modal-content">
-          <h2 class="text-xl font-bold mb-4">Complete Transaction</h2>
-          <div id="transactionDetails" class="mb-4 space-y-2"></div>
-          <div class="flex justify-end space-x-2">
-            <button
-              id="cancelCompleteTransactionBtn"
-              class="bg-gray-300 px-4 py-2 rounded-md"
-            >
-              Cancel
-            </button>
-            <button
-              id="rejectTransactionBtn"
-              class="bg-red-500 px-4 py-2 rounded-md text-white hover:bg-red-600"
-            >
-              Reject Transaction
-            </button>
-            <button
-              id="approveTransactionBtn"
-              class="bg-green-500 px-4 py-2 rounded-md text-white hover:bg-green-600"
-            >
-              Approve Transaction
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Success/Error Modals -->
-      <div id="successModal" class="modal">
-        <div class="modal-content text-center">
-          <h2 class="text-xl font-bold mb-4 text-green-600">Success</h2>
-          <p id="successMessage" class="mb-4">Operation successful!</p>
-          <button
-            id="closeSuccessBtn"
-            class="bg-[#12729C] px-4 py-2 rounded-md text-white hover:bg-[#0f5c80]"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-      <div id="errorModal" class="modal">
-        <div class="modal-content text-center">
-          <h2 class="text-xl font-bold mb-4 text-red-600">Error</h2>
-          <p id="errorMessage" class="mb-4">Operation failed!</p>
-          <button
-            id="closeErrorBtn"
-            class="bg-[#12729C] px-4 py-2 rounded-md text-white hover:bg-[#0f5c80]"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <script src="sidenav.js"></script>
-    <script>
+<script>
       // Global token for API requests
       const token = new URLSearchParams(window.location.search).get("token");
       let currentTransactionsPage = 0;
@@ -2057,12 +149,14 @@
   const providerSelect = document.querySelector("#addConfigurationModal #providerId");
   const categorySelect = document.querySelector("#addConfigurationModal #configCategoryId");
 
+  alert("Starting to populate configuration dropdowns...");
   console.log("Populating configuration dropdowns...");
   console.log("providerSelect:", providerSelect ? providerSelect.outerHTML : "Not found");
   console.log("categorySelect:", categorySelect ? categorySelect.outerHTML : "Not found");
 
   if (!providerSelect || !categorySelect) {
     const errorMsg = "Error: Configuration dropdowns not found in addConfigurationModal.";
+    alert(errorMsg);
     console.error(errorMsg, { providerSelect, categorySelect });
     showError(errorMsg);
     return;
@@ -2070,6 +164,7 @@
 
   if (!(providerSelect instanceof HTMLSelectElement)) {
     const errorMsg = "Error: providerId is not a select element.";
+    alert(errorMsg);
     console.error(errorMsg, providerSelect);
     showError(errorMsg);
     return;
@@ -2077,6 +172,7 @@
 
   if (!(categorySelect instanceof HTMLSelectElement)) {
     const errorMsg = "Error: configCategoryId is not a select element.";
+    alert(errorMsg);
     console.error(errorMsg, categorySelect);
     showError(errorMsg);
     return;
@@ -2084,6 +180,7 @@
 
   try {
     // Fetch providers
+    alert("Fetching providers...");
     console.log("Fetching providers...");
     const providerResponse = await fetch("http://45.91.171.213:9080/api/manage/bills-payment/providers", {
       headers: { Authorization: `Bearer ${token}` }
@@ -2091,20 +188,23 @@
     if (!providerResponse.ok) {
       const errorText = await providerResponse.text();
       const errorMsg = `Failed to fetch providers: ${errorText || providerResponse.status}`;
+      alert(errorMsg);
       throw new Error(errorMsg);
     }
     const providerData = await providerResponse.json();
     console.log("Raw providers response:", JSON.stringify(providerData, null, 2));
     providerSelect.innerHTML = '<option value="" disabled selected>Select a provider</option>';
     if (providerData.data?.length) {
-      // Include all valid providers
+      // Filter providers likely to be valid Bills Payment Providers
       const validProviders = providerData.data.filter(provider => 
         provider && 
         provider.id && 
-        !isNaN(parseInt(provider.id))
+        !isNaN(parseInt(provider.id)) && 
+        ["MULTI CHOICE NIGERIA", "Eko Electric", "GOTV"].includes(provider.providerName)
       );
       console.log("Valid providers:", JSON.stringify(validProviders, null, 2));
       if (validProviders.length) {
+        alert(`Found ${validProviders.length} valid providers.`);
         validProviders.forEach(provider => {
           const option = document.createElement("option");
           option.value = parseInt(provider.id);
@@ -2117,15 +217,18 @@
           providerSelect.appendChild(option);
         });
       } else {
+        alert("No valid Bills Payment Providers found. Please add providers like MULTI CHOICE NIGERIA or Eko Electric in the Billers section.");
         console.warn("No valid providers available");
         providerSelect.innerHTML += '<option value="" disabled>No valid providers available</option>';
       }
     } else {
+      alert("No providers found. Please add Bills Payment Providers in the Billers section.");
       console.warn("No providers available");
       providerSelect.innerHTML += '<option value="" disabled>No providers available</option>';
     }
 
     // Fetch categories
+    alert("Fetching categories...");
     console.log("Fetching categories...");
     const categoryResponse = await fetch("http://45.91.171.213:9080/api/manage/bills-payment/categories", {
       headers: { Authorization: `Bearer ${token}` }
@@ -2133,12 +236,14 @@
     if (!categoryResponse.ok) {
       const errorText = await categoryResponse.text();
       const errorMsg = `Failed to fetch categories: ${errorText || categoryResponse.status}`;
+      alert(errorMsg);
       throw new Error(errorMsg);
     }
     const categoryData = await categoryResponse.json();
     console.log("Categories response:", JSON.stringify(categoryData, null, 2));
     categorySelect.innerHTML = '<option value="" disabled selected>Select a category</option>';
     if (categoryData.data?.length) {
+      alert(`Found ${categoryData.data.length} categories.`);
       categoryData.data.forEach(category => {
         const option = document.createElement("option");
         option.value = category.id;
@@ -2150,306 +255,295 @@
         categorySelect.appendChild(option);
       });
       console.log("Category dropdown HTML after population:", categorySelect.innerHTML);
+      alert(`Categories added to dropdown. Options count: ${categorySelect.options.length}`);
     } else {
+      alert("No categories found. Please add categories first.");
       console.warn("No categories available");
       categorySelect.innerHTML += '<option value="" disabled>No categories available</option>';
     }
   } catch (error) {
     const errorMsg = `Error loading dropdowns: ${error.message}`;
+    alert(errorMsg);
     console.error(errorMsg, error);
     showError(errorMsg);
   }
 }
 
-      function setupAddConfigurationForm() {
-        const form = document.getElementById("addConfigurationForm");
-        const cancelBtn = document.getElementById("cancelAddConfigurationBtn");
 
-        if (form) {
-          form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const feeName = document.getElementById("feeName").value;
-            const feeDescription =
-              document.getElementById("feeDescription").value;
-            const feeAmount = parseFloat(
-              document.getElementById("feeAmount").value
-            );
-            const feeCurrency = document.getElementById("feeCurrency").value;
-            const providerSelect = document.querySelector(
-              "#addConfigurationModal #providerId"
-            );
-            const providerId = providerSelect
-              ? parseInt(providerSelect.value)
-              : null;
-            const categorySelect = document.querySelector(
-              "#addConfigurationModal #configCategoryId"
-            );
-            const categoryId = categorySelect
-              ? parseInt(categorySelect.value)
-              : null;
+function setupAddConfigurationForm() {
+  const form = document.getElementById("addConfigurationForm");
+  const cancelBtn = document.getElementById("cancelAddConfigurationBtn");
 
-            // Log provider dropdown options
-            const providerOptions = providerSelect
-              ? Array.from(providerSelect.options).map((opt) => ({
-                  value: opt.value,
-                  text: opt.textContent,
-                }))
-              : [];
-            console.log("Provider dropdown options:", providerOptions);
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const feeName = document.getElementById("feeName").value;
+      const feeDescription = document.getElementById("feeDescription").value;
+      const feeAmount = parseFloat(document.getElementById("feeAmount").value);
+      const feeCurrency = document.getElementById("feeCurrency").value;
+      const providerSelect = document.querySelector("#addConfigurationModal #providerId");
+      const providerId = providerSelect ? parseInt(providerSelect.value) : null;
+      const categorySelect = document.querySelector("#addConfigurationModal #configCategoryId");
+      const categoryId = categorySelect ? parseInt(categorySelect.value) : null;
 
-            console.log("Submitting configuration form:", {
-              feeName,
-              feeDescription,
-              feeAmount,
-              feeCurrency,
-              providerId,
-              categoryId,
-            });
-            alert(
-              `Submitting form with providerId: ${
-                providerId || "none"
-              }, categoryId: ${categoryId || "none"}`
-            );
+      // Log provider dropdown options
+      const providerOptions = providerSelect ? Array.from(providerSelect.options).map(opt => ({
+        value: opt.value,
+        text: opt.textContent
+      })) : [];
+      console.log("Provider dropdown options:", providerOptions);
 
-            if (!providerSelect || !providerId || isNaN(providerId)) {
-              const errorMsg = "Please select a valid provider.";
-              alert(errorMsg);
-              console.error(errorMsg, { providerSelect, providerId });
-              showError(errorMsg);
-              return;
-            }
+      console.log("Submitting configuration form:", {
+        feeName,
+        feeDescription,
+        feeAmount,
+        feeCurrency,
+        providerId,
+        categoryId
+      });
+      alert(`Submitting form with providerId: ${providerId || "none"}, categoryId: ${categoryId || "none"}`);
 
-            if (!categorySelect || !categoryId || isNaN(categoryId)) {
-              const errorMsg = "Please select a valid category.";
-              alert(errorMsg);
-              console.error(errorMsg, { categorySelect, categoryId });
-              showError(errorMsg);
-              return;
-            }
-
-            try {
-              alert("Sending fee data to server...");
-              console.log(
-                "Sending fee data:",
-                JSON.stringify(
-                  {
-                    feeName,
-                    feeDescription,
-                    feeAmount,
-                    feeCurrency,
-                    providerId,
-                    categoryId,
-                    taxRate: document.getElementById("taxRate").value
-                      ? parseFloat(document.getElementById("taxRate").value)
-                      : null,
-                  },
-                  null,
-                  2
-                )
-              );
-              const response = await fetch(
-                "http://45.91.171.213:9080/api/manage/bills-payment/fees/add",
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                  },
-                  body: JSON.stringify({
-                    feeName,
-                    feeDescription,
-                    feeAmount,
-                    feeCurrency,
-                    providerId,
-                    categoryId,
-                    taxRate: document.getElementById("taxRate").value
-                      ? parseFloat(document.getElementById("taxRate").value)
-                      : null,
-                  }),
-                }
-              );
-
-              const responseText = await response.text();
-              console.log("Add fee response:", responseText);
-              if (!response.ok) {
-                const errorMsg = `Failed to add fee: ${
-                  responseText || response.status
-                }`;
-                alert(errorMsg);
-                throw new Error(errorMsg);
-              }
-              alert("Fee added successfully!");
-              console.log("Fee added successfully");
-              showSuccess("Fee added successfully!");
-              hideModal("addConfigurationModal");
-              form.reset();
-              fetchBillsPaymentData();
-            } catch (error) {
-              const errorMsg = `Error adding fee: ${error.message}`;
-              alert(errorMsg);
-              console.error(errorMsg, error);
-              showError(errorMsg);
-            }
-          });
-        }
-
-        if (cancelBtn) {
-          cancelBtn.addEventListener("click", () => {
-            hideModal("addConfigurationModal");
-            form.reset();
-          });
-        }
+      if (!providerSelect || !providerId || isNaN(providerId)) {
+        const errorMsg = "Please select a valid provider.";
+        alert(errorMsg);
+        console.error(errorMsg, { providerSelect, providerId });
+        showError(errorMsg);
+        return;
       }
+
+      if (!categorySelect || !categoryId || isNaN(categoryId)) {
+        const errorMsg = "Please select a valid category.";
+        alert(errorMsg);
+        console.error(errorMsg, { categorySelect, categoryId });
+        showError(errorMsg);
+        return;
+      }
+
+      try {
+        alert("Sending fee data to server...");
+        console.log("Sending fee data:", JSON.stringify({
+          feeName,
+          feeDescription,
+          feeAmount,
+          feeCurrency,
+          providerId,
+          categoryId,
+          taxRate: document.getElementById("taxRate").value ? parseFloat(document.getElementById("taxRate").value) : null
+        }, null, 2));
+        const response = await fetch("http://45.91.171.213:9080/api/manage/bills-payment/fees/add", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            feeName,
+            feeDescription,
+            feeAmount,
+            feeCurrency,
+            providerId,
+            categoryId,
+            taxRate: document.getElementById("taxRate").value ? parseFloat(document.getElementById("taxRate").value) : null
+          })
+        });
+
+        const responseText = await response.text();
+        console.log("Add fee response:", responseText);
+        if (!response.ok) {
+          const errorMsg = `Failed to add fee: ${responseText || response.status}`;
+          alert(errorMsg);
+          throw new Error(errorMsg);
+        }
+        alert("Fee added successfully!");
+        console.log("Fee added successfully");
+        showSuccess("Fee added successfully!");
+        hideModal("addConfigurationModal");
+        form.reset();
+        fetchBillsPaymentData();
+      } catch (error) {
+        const errorMsg = `Error adding fee: ${error.message}`;
+        alert(errorMsg);
+        console.error(errorMsg, error);
+        showError(errorMsg);
+      }
+    });
+  }
+
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", () => {
+      hideModal("addConfigurationModal");
+      form.reset();
+    });
+  }
+}
 
       // Bills Payment Section
       function setupBillsPayment() {
-  const dropdown = document.getElementById("billsPaymentDropdown");
-  const addBtn = document.getElementById("addBillsPaymentBtn");
-  const filterForm = document.getElementById("billsPaymentFilterForm");
-  const resetBtn = document.getElementById("resetFilters");
-  const toggleFilterBtn = document.getElementById("toggleFilterBtn");
-  const transactionsControls = document.getElementById("transactionsControls");
-  const transactionsTabs = document.getElementById("transactionsTabs");
-  const filterContainer = document.getElementById("transactionsFilterContainer");
+        const dropdown = document.getElementById("billsPaymentDropdown");
+        const addBtn = document.getElementById("addBillsPaymentBtn");
+        const filterForm = document.getElementById("billsPaymentFilterForm");
+        const resetBtn = document.getElementById("resetFilters");
+        const toggleFilterBtn = document.getElementById("toggleFilterBtn");
+        const transactionsControls = document.getElementById(
+          "transactionsControls"
+        );
+        const transactionsTabs = document.getElementById("transactionsTabs");
+        const filterContainer = document.getElementById(
+          "transactionsFilterContainer"
+        );
 
-  function toggleControls() {
-    const type = dropdown.value;
-    addBtn.classList.toggle(
-      "hidden",
-      !(
-        type === "billers" ||
-        type === "categories" ||
-        type === "configuration" ||
-        type === "providers" // Added providers
-      )
-    );
-    transactionsControls.classList.toggle("hidden", type !== "transactions");
-    transactionsTabs.classList.toggle("hidden", type !== "transactions");
-    if (type !== "transactions") {
-      filterContainer.classList.add("hidden");
-    }
-  }
+        function toggleControls() {
+          const type = dropdown.value;
+          addBtn.classList.toggle(
+            "hidden",
+            !(
+              type === "billers" ||
+              type === "categories" ||
+              type === "configuration"
+            )
+          );
+          transactionsControls.classList.toggle(
+            "hidden",
+            type !== "transactions"
+          );
+          transactionsTabs.classList.toggle("hidden", type !== "transactions");
+          if (type !== "transactions") {
+            filterContainer.classList.add("hidden");
+          }
+        }
 
-  toggleControls();
+        toggleControls();
 
-  if (dropdown) {
-    dropdown.addEventListener("change", () => {
-      currentTransactionsPage = 1;
-      currentDetailedRemittancePage = 1;
-      currentConfigurationPage = 1;
-      toggleControls();
-      fetchBillsPaymentData();
-    });
-  }
+        if (dropdown) {
+          dropdown.addEventListener("change", () => {
+            currentTransactionsPage = 1;
+            currentDetailedRemittancePage = 1;
+            currentConfigurationPage = 1;
+            toggleControls();
+            fetchBillsPaymentData();
+          });
+        }
 
-  if (addBtn) {
-    addBtn.addEventListener("click", () => {
-      const type = dropdown.value;
-      if (type === "categories") showModal("addCategoryModal");
-      else if (type === "billers") {
-        populateBillerDropdowns();
-        showModal("addBillerModal");
-      } else if (type === "configuration") {
-        console.log("Opening add configuration modal...");
-        populateConfigurationDropdowns();
-        showModal("addConfigurationModal");
-      } else if (type === "providers") {
-        showModal("addProviderModal"); // Added providers
+        if (addBtn) {
+          addBtn.addEventListener("click", () => {
+            const type = dropdown.value;
+            if (type === "categories") showModal("addCategoryModal");
+            else if (type === "billers") {
+              populateBillerDropdowns();
+              showModal("addBillerModal");
+            } else if (type === "configuration") {
+              console.log("Opening add configuration modal...");
+              populateConfigurationDropdowns();
+              showModal("addConfigurationModal");
+            }
+          });
+        }
+
+        if (toggleFilterBtn) {
+          toggleFilterBtn.addEventListener("click", () => {
+            filterContainer.classList.toggle("hidden");
+          });
+        }
+
+        if (filterForm) {
+          filterForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            currentTransactionsPage = 1;
+            currentDetailedRemittancePage = 1;
+            currentConfigurationPage = 1;
+            await fetchBillsPaymentData();
+          });
+        }
+
+        if (resetBtn) {
+          resetBtn.addEventListener("click", () => {
+            filterForm.reset();
+            currentTransactionsPage = 1;
+            currentDetailedRemittancePage = 1;
+            currentConfigurationPage = 1;
+            fetchBillsPaymentData();
+          });
+        }
+
+        if (document.getElementById("retryFetchTransactions")) {
+          document
+            .getElementById("retryFetchTransactions")
+            .addEventListener("click", () => {
+              currentTransactionsPage = 1;
+              currentDetailedRemittancePage = 1;
+              currentConfigurationPage = 1;
+              fetchBillsPaymentData();
+            });
+        }
+
+        document
+          .getElementById("prevTransactions")
+          ?.addEventListener("click", () => {
+            if (
+              currentTransactionTab === "standard" &&
+              currentTransactionsPage > 1
+            ) {
+              currentTransactionsPage--;
+            } else if (
+              currentTransactionTab === "detailedRemittance" &&
+              currentDetailedRemittancePage > 1
+            ) {
+              currentDetailedRemittancePage--;
+            } else if (
+              type === "configuration" &&
+              currentConfigurationPage > 1
+            ) {
+              currentConfigurationPage--;
+            }
+            fetchBillsPaymentData();
+          });
+
+        document
+          .getElementById("nextTransactions")
+          ?.addEventListener("click", () => {
+            if (currentTransactionTab === "standard") {
+              currentTransactionsPage++;
+            } else if (currentTransactionTab === "detailedRemittance") {
+              currentDetailedRemittancePage++;
+            } else if (type === "configuration") {
+              currentConfigurationPage++;
+            }
+            fetchBillsPaymentData();
+          });
+
+        const standardTab = document.getElementById("standardTab");
+        const detailedRemittanceTab = document.getElementById(
+          "detailedRemittanceTab"
+        );
+
+        if (standardTab) {
+          standardTab.addEventListener("click", () => {
+            currentTransactionTab = "standard";
+            currentTransactionsPage = 1;
+            standardTab.classList.add("border-b-2", "border-blue-500");
+            detailedRemittanceTab.classList.remove(
+              "border-b-2",
+              "border-blue-500"
+            );
+            fetchBillsPaymentData();
+          });
+        }
+
+        if (detailedRemittanceTab) {
+          detailedRemittanceTab.addEventListener("click", () => {
+            currentTransactionTab = "detailedRemittance";
+            currentDetailedRemittancePage = 1;
+            detailedRemittanceTab.classList.add(
+              "border-b-2",
+              "border-blue-500"
+            );
+            standardTab.classList.remove("border-b-2", "border-blue-500");
+            fetchBillsPaymentData();
+          });
+        }
+
+        setupAddConfigurationForm();
       }
-    });
-  }
-
-  if (toggleFilterBtn) {
-    toggleFilterBtn.addEventListener("click", () => {
-      filterContainer.classList.toggle("hidden");
-    });
-  }
-
-  if (filterForm) {
-    filterForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      currentTransactionsPage = 1;
-      currentDetailedRemittancePage = 1;
-      currentConfigurationPage = 1;
-      await fetchBillsPaymentData();
-    });
-  }
-
-  if (resetBtn) {
-    resetBtn.addEventListener("click", () => {
-      filterForm.reset();
-      currentTransactionsPage = 1;
-      currentDetailedRemittancePage = 1;
-      currentConfigurationPage = 1;
-      fetchBillsPaymentData();
-    });
-  }
-
-  if (document.getElementById("retryFetchTransactions")) {
-    document
-      .getElementById("retryFetchTransactions")
-      .addEventListener("click", () => {
-        currentTransactionsPage = 1;
-        currentDetailedRemittancePage = 1;
-        currentConfigurationPage = 1;
-        fetchBillsPaymentData();
-      });
-  }
-
-  document
-    .getElementById("prevTransactions")
-    ?.addEventListener("click", () => {
-      if (currentTransactionTab === "standard" && currentTransactionsPage > 1) {
-        currentTransactionsPage--;
-      } else if (
-        currentTransactionTab === "detailedRemittance" &&
-        currentDetailedRemittancePage > 1
-      ) {
-        currentDetailedRemittancePage--;
-      } else if (type === "configuration" && currentConfigurationPage > 1) {
-        currentConfigurationPage--;
-      }
-      fetchBillsPaymentData();
-    });
-
-  document
-    .getElementById("nextTransactions")
-    ?.addEventListener("click", () => {
-      if (currentTransactionTab === "standard") {
-        currentTransactionsPage++;
-      } else if (currentTransactionTab === "detailedRemittance") {
-        currentDetailedRemittancePage++;
-      } else if (type === "configuration") {
-        currentConfigurationPage++;
-      }
-      fetchBillsPaymentData();
-    });
-
-  const standardTab = document.getElementById("standardTab");
-  const detailedRemittanceTab = document.getElementById("detailedRemittanceTab");
-
-  if (standardTab) {
-    standardTab.addEventListener("click", () => {
-      currentTransactionTab = "standard";
-      currentTransactionsPage = 1;
-      standardTab.classList.add("border-b-2", "border-blue-500");
-      detailedRemittanceTab.classList.remove("border-b-2", "border-blue-500");
-      fetchBillsPaymentData();
-    });
-  }
-
-  if (detailedRemittanceTab) {
-    detailedRemittanceTab.addEventListener("click", () => {
-      currentTransactionTab = "detailedRemittance";
-      currentDetailedRemittancePage = 1;
-      detailedRemittanceTab.classList.add("border-b-2", "border-blue-500");
-      standardTab.classList.remove("border-b-2", "border-blue-500");
-      fetchBillsPaymentData();
-    });
-  }
-
-  setupAddConfigurationForm();
-}
 
       // Replace the existing fetchBillsPaymentData function
       async function fetchBillsPaymentData() {
@@ -3666,46 +1760,33 @@
             const providerNameInput =
               document.getElementById("addProviderName");
             const imageUrlInput = document.getElementById("providerImage");
-            const serviceTypeInput = document.getElementById("serviceType");
 
+            // Debug: Check if elements exist
             console.log("addProviderName element:", providerNameInput);
             console.log("providerImage element:", imageUrlInput);
-            console.log("serviceType element:", serviceTypeInput);
 
-            if (!providerNameInput || !imageUrlInput || !serviceTypeInput) {
+            if (!providerNameInput || !imageUrlInput) {
               showError("Form error: Input fields not found");
               return;
             }
 
             const providerName = providerNameInput.value.trim();
             const imageUrl = imageUrlInput.value.trim();
-            const serviceType = serviceTypeInput.value;
 
             if (!providerName) {
               showError("Provider Name is required");
               return;
             }
-            if (
-              !serviceType ||
-              !["BillsPayment", "Remit"].includes(serviceType)
-            ) {
-              showError(
-                "Please select a valid Service Type (BillsPayment or Remit)"
-              );
-              return;
-            }
 
             const payload = {
               providerName: providerName,
-              imageUrl: imageUrl || null,
-              serviceType: serviceType,
+              imageUrl: imageUrl || null, // Send null if empty
             };
 
             console.log(
               "Submitting provider payload:",
               JSON.stringify(payload, null, 2)
             );
-            alert("Submitting provider: " + JSON.stringify(payload, null, 2));
 
             try {
               const response = await fetch(
@@ -3721,27 +1802,21 @@
               );
 
               const responseText = await response.text();
-              console.log("Add provider response:", responseText);
+              console.log("Response status:", response.status);
+              console.log("Response body:", responseText);
 
               if (!response.ok) {
-                const errorMsg = `Failed to add provider: ${
-                  responseText || response.status
-                }`;
-                alert(errorMsg);
-                throw new Error(errorMsg);
+                throw new Error(
+                  `HTTP error! status: ${response.status} - ${responseText}`
+                );
               }
 
-              alert("Provider added successfully!");
-              console.log("Provider added successfully");
-              showSuccess("Provider added successfully!");
               hideModal("addProviderModal");
-              document.getElementById("addProviderForm").reset();
+              showSuccess("Provider added successfully!");
               fetchBillsPaymentData();
             } catch (error) {
-              const errorMsg = `Error adding provider: ${error.message}`;
-              alert(errorMsg);
-              console.error(errorMsg, error);
-              showError(errorMsg);
+              console.error("Submission error:", error);
+              showError(error.message);
             }
           });
 
@@ -4426,5 +2501,3 @@
           ?.addEventListener("click", () => hideModal("updateUserModal"));
       }
     </script>
-  </body>
-</html>
