@@ -122,6 +122,30 @@
       .action-icon:hover {
         color: #1f2937; /* Tailwind gray-800 */
       }
+      .countries-table-container {
+      max-height: 100rem;
+      overflow-y: auto;
+      position: relative;
+    }
+    .countries-table-container table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .countries-table-container thead {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #e5e7eb;
+    }
+    .dropdown-menu {
+      min-width: 120px;
+      border: 1px solid #e5e7eb;
+    }
+    .dropdown-menu button {
+      display: block;
+      width: 100%;
+      text-align: left;
+    }
     </style>
   </head>
   <body class="bg-gray-100 h-screen flex">
@@ -157,6 +181,12 @@
           class="px-4 py-2 font-semibold text-gray-700"
         >
           User Management
+        </button>
+        <button
+          id="countriesManagementTab"
+          class="px-4 py-2 text-gray-600 hover:text-blue-500"
+        >
+          Countries Management
         </button>
       </div>
 
@@ -489,6 +519,14 @@
           </button>
         </div>
         <div id="userManagementList" class="space-y-4"></div>
+      </div>
+
+      <div id="countriesManagementContent" class="hidden p-4">
+        <div class="flex justify-between mb-4">
+          <h2 class="text-xl font-semibold">Countries Management</h2>
+          <button id="addCountryBtn" class="bg-blue-500 text-white px-4 py-2 rounded">Add New</button>
+        </div>
+        <div id="countriesManagementList" class="relative"></div>
       </div>
 
       <!-- Add User Modal -->
@@ -1850,6 +1888,276 @@
         </div>
       </div>
 
+      <div id="addCountryModal" class="modal" style="display: none">
+        <div class="modal-content">
+          <h2>Add New Country</h2>
+          <form id="addCountryForm">
+            <div class="mb-4">
+              <label for="countryName" class="block text-gray-700"
+                >Country Name *</label
+              >
+              <input
+                id="countryName"
+                type="text"
+                class="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label for="countryCode" class="block text-gray-700"
+                >Country Code *</label
+              >
+              <input
+                id="countryCode"
+                type="text"
+                class="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label for="countryIsoCode" class="block text-gray-700"
+                >ISO Code *</label
+              >
+              <input
+                id="countryIsoCode"
+                type="text"
+                class="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label for="dialCode" class="block text-gray-700"
+                >Dial Code *</label
+              >
+              <input
+                id="dialCode"
+                type="text"
+                class="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label for="currencyCode" class="block text-gray-700"
+                >Currency Code *</label
+              >
+              <input
+                id="currencyCode"
+                type="text"
+                class="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label for="currencySymbol" class="block text-gray-700"
+                >Currency Symbol *</label
+              >
+              <input
+                id="currencySymbol"
+                type="text"
+                class="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label for="mobileLength" class="block text-gray-700"
+                >Mobile Length</label
+              >
+              <input
+                id="mobileLength"
+                type="text"
+                class="w-full p-2 border rounded"
+              />
+            </div>
+            <div class="mb-4">
+              <label for="billPaymentSupported" class="block text-gray-700"
+                >Bill Payment Supported</label
+              >
+              <input id="billPaymentSupported" type="checkbox" />
+            </div>
+            <div class="mb-4">
+              <label for="offlinePaymentSupported" class="block text-gray-700"
+                >Offline Payment Supported</label
+              >
+              <input id="offlinePaymentSupported" type="checkbox" />
+            </div>
+            <div class="mb-4">
+              <label for="countryStatus" class="block text-gray-700"
+                >Status</label
+              >
+              <select id="countryStatus" class="w-full p-2 border rounded">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+            <div class="flex justify-end space-x-2">
+              <button
+                type="submit"
+                class="bg-blue-500 text-white px-4 py-2 rounded"
+              >
+                Add Country
+              </button>
+              <button
+                type="button"
+                id="cancelAddCountryBtn"
+                class="bg-gray-300 px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="updateCountryModal" class="modal" style="display: none">
+        <div class="modal-content">
+          <h2>Update Country</h2>
+          <form id="updateCountryForm">
+            <input id="updateCountryId" type="hidden" />
+            <div class="mb-4">
+              <label for="updateCountryName" class="block text-gray-700"
+                >Country Name *</label
+              >
+              <input
+                id="updateCountryName"
+                type="text"
+                class="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label for="updateCountryCode" class="block text-gray-700"
+                >Country Code *</label
+              >
+              <input
+                id="updateCountryCode"
+                type="text"
+                class="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label for="updateCountryIsoCode" class="block text-gray-700"
+                >ISO Code *</label
+              >
+              <input
+                id="updateCountryIsoCode"
+                type="text"
+                class="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label for="updateDialCode" class="block text-gray-700"
+                >Dial Code *</label
+              >
+              <input
+                id="updateDialCode"
+                type="text"
+                class="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label for="updateCurrencyCode" class="block text-gray-700"
+                >Currency Code *</label
+              >
+              <input
+                id="updateCurrencyCode"
+                type="text"
+                class="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label for="updateCurrencySymbol" class="block text-gray-700"
+                >Currency Symbol *</label
+              >
+              <input
+                id="updateCurrencySymbol"
+                type="text"
+                class="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label for="updateMobileLength" class="block text-gray-700"
+                >Mobile Length</label
+              >
+              <input
+                id="updateMobileLength"
+                type="text"
+                class="w-full p-2 border rounded"
+              />
+            </div>
+            <div class="mb-4">
+              <label
+                for="updateBillPaymentSupported"
+                class="block text-gray-700"
+                >Bill Payment Supported</label
+              >
+              <input id="updateBillPaymentSupported" type="checkbox" />
+            </div>
+            <div class="mb-4">
+              <label
+                for="updateOfflinePaymentSupported"
+                class="block text-gray-700"
+                >Offline Payment Supported</label
+              >
+              <input id="updateOfflinePaymentSupported" type="checkbox" />
+            </div>
+            <div class="mb-4">
+              <label for="updateCountryStatus" class="block text-gray-700"
+                >Status</label
+              >
+              <select
+                id="updateCountryStatus"
+                class="w-full p-2 border rounded"
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+            <div class="flex justify-end space-x-2">
+              <button
+                type="submit"
+                class="bg-blue-500 text-white px-4 py-2 rounded"
+              >
+                Update Country
+              </button>
+              <button
+                type="button"
+                id="cancelUpdateCountryBtn"
+                class="bg-gray-300 px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="deleteCountryModal" class="modal" style="display: none">
+        <div class="modal-content">
+          <h2>Delete Country</h2>
+          <p>Are you sure you want to delete this country?</p>
+          <input id="deleteCountryId" type="hidden" />
+          <div class="flex justify-end space-x-2">
+            <button
+              id="confirmDeleteCountryBtn"
+              class="bg-red-500 text-white px-4 py-2 rounded"
+            >
+              Delete
+            </button>
+            <button
+              id="cancelDeleteCountryBtn"
+              class="bg-gray-300 px-4 py-2 rounded"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Complete Transaction Modal -->
       <div id="completeTransactionModal" class="modal">
         <div class="modal-content">
@@ -1982,7 +2290,7 @@
         setupUserManagement();
         setupForms();
         setupModalEventListeners();
-
+        setupCountriesManagement();
         fetchBillsPaymentData();
 
         // Ensure Start Date and End Date are not the same
@@ -2027,6 +2335,7 @@
           "clientManagement",
           "productManagement",
           "userManagement",
+          "countriesManagement", // Added
         ];
         tabs.forEach((tab) => {
           const tabElement = document.getElementById(`${tab}Tab`);
@@ -2048,118 +2357,157 @@
               if (tab === "clientManagement") fetchClientManagementData();
               if (tab === "productManagement") fetchProductManagementData();
               if (tab === "userManagement") fetchUserManagementData();
+              if (tab === "countriesManagement") fetchCountriesManagementData();
             });
           }
         });
       }
 
       async function populateConfigurationDropdowns() {
-  const providerSelect = document.querySelector("#addConfigurationModal #providerId");
-  const categorySelect = document.querySelector("#addConfigurationModal #configCategoryId");
+        const providerSelect = document.querySelector(
+          "#addConfigurationModal #providerId"
+        );
+        const categorySelect = document.querySelector(
+          "#addConfigurationModal #configCategoryId"
+        );
 
-  console.log("Populating configuration dropdowns...");
-  console.log("providerSelect:", providerSelect ? providerSelect.outerHTML : "Not found");
-  console.log("categorySelect:", categorySelect ? categorySelect.outerHTML : "Not found");
+        console.log("Populating configuration dropdowns...");
+        console.log(
+          "providerSelect:",
+          providerSelect ? providerSelect.outerHTML : "Not found"
+        );
+        console.log(
+          "categorySelect:",
+          categorySelect ? categorySelect.outerHTML : "Not found"
+        );
 
-  if (!providerSelect || !categorySelect) {
-    const errorMsg = "Error: Configuration dropdowns not found in addConfigurationModal.";
-    console.error(errorMsg, { providerSelect, categorySelect });
-    showError(errorMsg);
-    return;
-  }
+        if (!providerSelect || !categorySelect) {
+          const errorMsg =
+            "Error: Configuration dropdowns not found in addConfigurationModal.";
+          console.error(errorMsg, { providerSelect, categorySelect });
+          showError(errorMsg);
+          return;
+        }
 
-  if (!(providerSelect instanceof HTMLSelectElement)) {
-    const errorMsg = "Error: providerId is not a select element.";
-    console.error(errorMsg, providerSelect);
-    showError(errorMsg);
-    return;
-  }
+        if (!(providerSelect instanceof HTMLSelectElement)) {
+          const errorMsg = "Error: providerId is not a select element.";
+          console.error(errorMsg, providerSelect);
+          showError(errorMsg);
+          return;
+        }
 
-  if (!(categorySelect instanceof HTMLSelectElement)) {
-    const errorMsg = "Error: configCategoryId is not a select element.";
-    console.error(errorMsg, categorySelect);
-    showError(errorMsg);
-    return;
-  }
+        if (!(categorySelect instanceof HTMLSelectElement)) {
+          const errorMsg = "Error: configCategoryId is not a select element.";
+          console.error(errorMsg, categorySelect);
+          showError(errorMsg);
+          return;
+        }
 
-  try {
-    // Fetch providers
-    console.log("Fetching providers...");
-    const providerResponse = await fetch("http://45.91.171.213:9080/api/manage/bills-payment/providers", {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!providerResponse.ok) {
-      const errorText = await providerResponse.text();
-      const errorMsg = `Failed to fetch providers: ${errorText || providerResponse.status}`;
-      throw new Error(errorMsg);
-    }
-    const providerData = await providerResponse.json();
-    console.log("Raw providers response:", JSON.stringify(providerData, null, 2));
-    providerSelect.innerHTML = '<option value="" disabled selected>Select a provider</option>';
-    if (providerData.data?.length) {
-      // Include all valid providers
-      const validProviders = providerData.data.filter(provider => 
-        provider && 
-        provider.id && 
-        !isNaN(parseInt(provider.id))
-      );
-      console.log("Valid providers:", JSON.stringify(validProviders, null, 2));
-      if (validProviders.length) {
-        validProviders.forEach(provider => {
-          const option = document.createElement("option");
-          option.value = parseInt(provider.id);
-          option.textContent = provider.providerName || `Provider ${provider.id}`;
-          console.log("Adding provider option:", {
-            value: option.value,
-            text: option.textContent,
-            provider: provider
-          });
-          providerSelect.appendChild(option);
-        });
-      } else {
-        console.warn("No valid providers available");
-        providerSelect.innerHTML += '<option value="" disabled>No valid providers available</option>';
+        try {
+          // Fetch providers
+          console.log("Fetching providers...");
+          const providerResponse = await fetch(
+            "http://45.91.171.213:9080/api/manage/bills-payment/providers",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          if (!providerResponse.ok) {
+            const errorText = await providerResponse.text();
+            const errorMsg = `Failed to fetch providers: ${
+              errorText || providerResponse.status
+            }`;
+            throw new Error(errorMsg);
+          }
+          const providerData = await providerResponse.json();
+          console.log(
+            "Raw providers response:",
+            JSON.stringify(providerData, null, 2)
+          );
+          providerSelect.innerHTML =
+            '<option value="" disabled selected>Select a provider</option>';
+          if (providerData.data?.length) {
+            // Include all valid providers
+            const validProviders = providerData.data.filter(
+              (provider) =>
+                provider && provider.id && !isNaN(parseInt(provider.id))
+            );
+            console.log(
+              "Valid providers:",
+              JSON.stringify(validProviders, null, 2)
+            );
+            if (validProviders.length) {
+              validProviders.forEach((provider) => {
+                const option = document.createElement("option");
+                option.value = parseInt(provider.id);
+                option.textContent =
+                  provider.providerName || `Provider ${provider.id}`;
+                console.log("Adding provider option:", {
+                  value: option.value,
+                  text: option.textContent,
+                  provider: provider,
+                });
+                providerSelect.appendChild(option);
+              });
+            } else {
+              console.warn("No valid providers available");
+              providerSelect.innerHTML +=
+                '<option value="" disabled>No valid providers available</option>';
+            }
+          } else {
+            console.warn("No providers available");
+            providerSelect.innerHTML +=
+              '<option value="" disabled>No providers available</option>';
+          }
+
+          // Fetch categories
+          console.log("Fetching categories...");
+          const categoryResponse = await fetch(
+            "http://45.91.171.213:9080/api/manage/bills-payment/categories",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          if (!categoryResponse.ok) {
+            const errorText = await categoryResponse.text();
+            const errorMsg = `Failed to fetch categories: ${
+              errorText || categoryResponse.status
+            }`;
+            throw new Error(errorMsg);
+          }
+          const categoryData = await categoryResponse.json();
+          console.log(
+            "Categories response:",
+            JSON.stringify(categoryData, null, 2)
+          );
+          categorySelect.innerHTML =
+            '<option value="" disabled selected>Select a category</option>';
+          if (categoryData.data?.length) {
+            categoryData.data.forEach((category) => {
+              const option = document.createElement("option");
+              option.value = category.id;
+              option.textContent = category.name || "Unnamed Category";
+              console.log("Adding category option:", {
+                value: option.value,
+                text: option.textContent,
+              });
+              categorySelect.appendChild(option);
+            });
+            console.log(
+              "Category dropdown HTML after population:",
+              categorySelect.innerHTML
+            );
+          } else {
+            console.warn("No categories available");
+            categorySelect.innerHTML +=
+              '<option value="" disabled>No categories available</option>';
+          }
+        } catch (error) {
+          const errorMsg = `Error loading dropdowns: ${error.message}`;
+          console.error(errorMsg, error);
+          showError(errorMsg);
+        }
       }
-    } else {
-      console.warn("No providers available");
-      providerSelect.innerHTML += '<option value="" disabled>No providers available</option>';
-    }
-
-    // Fetch categories
-    console.log("Fetching categories...");
-    const categoryResponse = await fetch("http://45.91.171.213:9080/api/manage/bills-payment/categories", {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!categoryResponse.ok) {
-      const errorText = await categoryResponse.text();
-      const errorMsg = `Failed to fetch categories: ${errorText || categoryResponse.status}`;
-      throw new Error(errorMsg);
-    }
-    const categoryData = await categoryResponse.json();
-    console.log("Categories response:", JSON.stringify(categoryData, null, 2));
-    categorySelect.innerHTML = '<option value="" disabled selected>Select a category</option>';
-    if (categoryData.data?.length) {
-      categoryData.data.forEach(category => {
-        const option = document.createElement("option");
-        option.value = category.id;
-        option.textContent = category.name || "Unnamed Category";
-        console.log("Adding category option:", {
-          value: option.value,
-          text: option.textContent
-        });
-        categorySelect.appendChild(option);
-      });
-      console.log("Category dropdown HTML after population:", categorySelect.innerHTML);
-    } else {
-      console.warn("No categories available");
-      categorySelect.innerHTML += '<option value="" disabled>No categories available</option>';
-    }
-  } catch (error) {
-    const errorMsg = `Error loading dropdowns: ${error.message}`;
-    console.error(errorMsg, error);
-    showError(errorMsg);
-  }
-}
 
       function setupAddConfigurationForm() {
         const form = document.getElementById("addConfigurationForm");
@@ -2303,153 +2651,176 @@
 
       // Bills Payment Section
       function setupBillsPayment() {
-  const dropdown = document.getElementById("billsPaymentDropdown");
-  const addBtn = document.getElementById("addBillsPaymentBtn");
-  const filterForm = document.getElementById("billsPaymentFilterForm");
-  const resetBtn = document.getElementById("resetFilters");
-  const toggleFilterBtn = document.getElementById("toggleFilterBtn");
-  const transactionsControls = document.getElementById("transactionsControls");
-  const transactionsTabs = document.getElementById("transactionsTabs");
-  const filterContainer = document.getElementById("transactionsFilterContainer");
+        const dropdown = document.getElementById("billsPaymentDropdown");
+        const addBtn = document.getElementById("addBillsPaymentBtn");
+        const filterForm = document.getElementById("billsPaymentFilterForm");
+        const resetBtn = document.getElementById("resetFilters");
+        const toggleFilterBtn = document.getElementById("toggleFilterBtn");
+        const transactionsControls = document.getElementById(
+          "transactionsControls"
+        );
+        const transactionsTabs = document.getElementById("transactionsTabs");
+        const filterContainer = document.getElementById(
+          "transactionsFilterContainer"
+        );
 
-  function toggleControls() {
-    const type = dropdown.value;
-    addBtn.classList.toggle(
-      "hidden",
-      !(
-        type === "billers" ||
-        type === "categories" ||
-        type === "configuration" ||
-        type === "providers" // Added providers
-      )
-    );
-    transactionsControls.classList.toggle("hidden", type !== "transactions");
-    transactionsTabs.classList.toggle("hidden", type !== "transactions");
-    if (type !== "transactions") {
-      filterContainer.classList.add("hidden");
-    }
-  }
+        function toggleControls() {
+          const type = dropdown.value;
+          addBtn.classList.toggle(
+            "hidden",
+            !(
+              (
+                type === "billers" ||
+                type === "categories" ||
+                type === "configuration" ||
+                type === "providers"
+              ) // Added providers
+            )
+          );
+          transactionsControls.classList.toggle(
+            "hidden",
+            type !== "transactions"
+          );
+          transactionsTabs.classList.toggle("hidden", type !== "transactions");
+          if (type !== "transactions") {
+            filterContainer.classList.add("hidden");
+          }
+        }
 
-  toggleControls();
+        toggleControls();
 
-  if (dropdown) {
-    dropdown.addEventListener("change", () => {
-      currentTransactionsPage = 1;
-      currentDetailedRemittancePage = 1;
-      currentConfigurationPage = 1;
-      toggleControls();
-      fetchBillsPaymentData();
-    });
-  }
+        if (dropdown) {
+          dropdown.addEventListener("change", () => {
+            currentTransactionsPage = 1;
+            currentDetailedRemittancePage = 1;
+            currentConfigurationPage = 1;
+            toggleControls();
+            fetchBillsPaymentData();
+          });
+        }
 
-  if (addBtn) {
-    addBtn.addEventListener("click", () => {
-      const type = dropdown.value;
-      if (type === "categories") showModal("addCategoryModal");
-      else if (type === "billers") {
-        populateBillerDropdowns();
-        showModal("addBillerModal");
-      } else if (type === "configuration") {
-        console.log("Opening add configuration modal...");
-        populateConfigurationDropdowns();
-        showModal("addConfigurationModal");
-      } else if (type === "providers") {
-        showModal("addProviderModal"); // Added providers
+        if (addBtn) {
+          addBtn.addEventListener("click", () => {
+            const type = dropdown.value;
+            if (type === "categories") showModal("addCategoryModal");
+            else if (type === "billers") {
+              populateBillerDropdowns();
+              showModal("addBillerModal");
+            } else if (type === "configuration") {
+              console.log("Opening add configuration modal...");
+              populateConfigurationDropdowns();
+              showModal("addConfigurationModal");
+            } else if (type === "providers") {
+              showModal("addProviderModal"); // Added providers
+            }
+          });
+        }
+
+        if (toggleFilterBtn) {
+          toggleFilterBtn.addEventListener("click", () => {
+            filterContainer.classList.toggle("hidden");
+          });
+        }
+
+        if (filterForm) {
+          filterForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            currentTransactionsPage = 1;
+            currentDetailedRemittancePage = 1;
+            currentConfigurationPage = 1;
+            await fetchBillsPaymentData();
+          });
+        }
+
+        if (resetBtn) {
+          resetBtn.addEventListener("click", () => {
+            filterForm.reset();
+            currentTransactionsPage = 1;
+            currentDetailedRemittancePage = 1;
+            currentConfigurationPage = 1;
+            fetchBillsPaymentData();
+          });
+        }
+
+        if (document.getElementById("retryFetchTransactions")) {
+          document
+            .getElementById("retryFetchTransactions")
+            .addEventListener("click", () => {
+              currentTransactionsPage = 1;
+              currentDetailedRemittancePage = 1;
+              currentConfigurationPage = 1;
+              fetchBillsPaymentData();
+            });
+        }
+
+        document
+          .getElementById("prevTransactions")
+          ?.addEventListener("click", () => {
+            if (
+              currentTransactionTab === "standard" &&
+              currentTransactionsPage > 1
+            ) {
+              currentTransactionsPage--;
+            } else if (
+              currentTransactionTab === "detailedRemittance" &&
+              currentDetailedRemittancePage > 1
+            ) {
+              currentDetailedRemittancePage--;
+            } else if (
+              type === "configuration" &&
+              currentConfigurationPage > 1
+            ) {
+              currentConfigurationPage--;
+            }
+            fetchBillsPaymentData();
+          });
+
+        document
+          .getElementById("nextTransactions")
+          ?.addEventListener("click", () => {
+            if (currentTransactionTab === "standard") {
+              currentTransactionsPage++;
+            } else if (currentTransactionTab === "detailedRemittance") {
+              currentDetailedRemittancePage++;
+            } else if (type === "configuration") {
+              currentConfigurationPage++;
+            }
+            fetchBillsPaymentData();
+          });
+
+        const standardTab = document.getElementById("standardTab");
+        const detailedRemittanceTab = document.getElementById(
+          "detailedRemittanceTab"
+        );
+
+        if (standardTab) {
+          standardTab.addEventListener("click", () => {
+            currentTransactionTab = "standard";
+            currentTransactionsPage = 1;
+            standardTab.classList.add("border-b-2", "border-blue-500");
+            detailedRemittanceTab.classList.remove(
+              "border-b-2",
+              "border-blue-500"
+            );
+            fetchBillsPaymentData();
+          });
+        }
+
+        if (detailedRemittanceTab) {
+          detailedRemittanceTab.addEventListener("click", () => {
+            currentTransactionTab = "detailedRemittance";
+            currentDetailedRemittancePage = 1;
+            detailedRemittanceTab.classList.add(
+              "border-b-2",
+              "border-blue-500"
+            );
+            standardTab.classList.remove("border-b-2", "border-blue-500");
+            fetchBillsPaymentData();
+          });
+        }
+
+        setupAddConfigurationForm();
       }
-    });
-  }
-
-  if (toggleFilterBtn) {
-    toggleFilterBtn.addEventListener("click", () => {
-      filterContainer.classList.toggle("hidden");
-    });
-  }
-
-  if (filterForm) {
-    filterForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      currentTransactionsPage = 1;
-      currentDetailedRemittancePage = 1;
-      currentConfigurationPage = 1;
-      await fetchBillsPaymentData();
-    });
-  }
-
-  if (resetBtn) {
-    resetBtn.addEventListener("click", () => {
-      filterForm.reset();
-      currentTransactionsPage = 1;
-      currentDetailedRemittancePage = 1;
-      currentConfigurationPage = 1;
-      fetchBillsPaymentData();
-    });
-  }
-
-  if (document.getElementById("retryFetchTransactions")) {
-    document
-      .getElementById("retryFetchTransactions")
-      .addEventListener("click", () => {
-        currentTransactionsPage = 1;
-        currentDetailedRemittancePage = 1;
-        currentConfigurationPage = 1;
-        fetchBillsPaymentData();
-      });
-  }
-
-  document
-    .getElementById("prevTransactions")
-    ?.addEventListener("click", () => {
-      if (currentTransactionTab === "standard" && currentTransactionsPage > 1) {
-        currentTransactionsPage--;
-      } else if (
-        currentTransactionTab === "detailedRemittance" &&
-        currentDetailedRemittancePage > 1
-      ) {
-        currentDetailedRemittancePage--;
-      } else if (type === "configuration" && currentConfigurationPage > 1) {
-        currentConfigurationPage--;
-      }
-      fetchBillsPaymentData();
-    });
-
-  document
-    .getElementById("nextTransactions")
-    ?.addEventListener("click", () => {
-      if (currentTransactionTab === "standard") {
-        currentTransactionsPage++;
-      } else if (currentTransactionTab === "detailedRemittance") {
-        currentDetailedRemittancePage++;
-      } else if (type === "configuration") {
-        currentConfigurationPage++;
-      }
-      fetchBillsPaymentData();
-    });
-
-  const standardTab = document.getElementById("standardTab");
-  const detailedRemittanceTab = document.getElementById("detailedRemittanceTab");
-
-  if (standardTab) {
-    standardTab.addEventListener("click", () => {
-      currentTransactionTab = "standard";
-      currentTransactionsPage = 1;
-      standardTab.classList.add("border-b-2", "border-blue-500");
-      detailedRemittanceTab.classList.remove("border-b-2", "border-blue-500");
-      fetchBillsPaymentData();
-    });
-  }
-
-  if (detailedRemittanceTab) {
-    detailedRemittanceTab.addEventListener("click", () => {
-      currentTransactionTab = "detailedRemittance";
-      currentDetailedRemittancePage = 1;
-      detailedRemittanceTab.classList.add("border-b-2", "border-blue-500");
-      standardTab.classList.remove("border-b-2", "border-blue-500");
-      fetchBillsPaymentData();
-    });
-  }
-
-  setupAddConfigurationForm();
-}
 
       // Replace the existing fetchBillsPaymentData function
       async function fetchBillsPaymentData() {
@@ -3655,6 +4026,190 @@
         }
       }
 
+      // New function for Countries Management setup
+      function setupCountriesManagement() {
+        const addBtn = document.getElementById("addCountryBtn");
+        if (addBtn) {
+          addBtn.addEventListener("click", () => {
+            showModal("addCountryModal");
+          });
+        }
+      }
+
+     // fetchCountriesManagementData updated
+      async function fetchCountriesManagementData() {
+        const list = document.getElementById("countriesManagementList");
+        list.innerHTML = "<p>Loading...</p>";
+
+        try {
+          const response = await fetch(
+            "http://45.91.171.213:9080/api/manage/service/countries/all",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`
+              }
+            }
+          );
+          const responseText = await response.text();
+          console.log("Countries API response:", responseText);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch countries: ${responseText || response.status}`);
+          }
+          const data = JSON.parse(responseText);
+          console.log("Countries parsed data:", data);
+
+          if (!data.data || data.data.length === 0) {
+            list.innerHTML = "<p>No countries found.</p>";
+          } else {
+            list.innerHTML = `
+              <div class="overflow-x-auto relative">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Country Name</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Country Code</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ISO Code</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dial Code</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Currency</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Currency Symbol</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile Length</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bill Payment</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Offline Payment</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    ${data.data.map(country => `
+                      <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${country.countryName || "N/A"}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${country.countryCode || "N/A"}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${country.countryIsoCode || "N/A"}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${country.dialCode || "N/A"}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${country.currencyCode || "N/A"}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${country.currencySymbol || "N/A"}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${country.mobileLength || "N/A"}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${country.billPaymentSupported ? "Yes" : "No"}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${country.offlinePaymentSupported ? "Yes" : "No"}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${country.status || "N/A"}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 relative">
+                          <button class="actionBtn" data-id="${country.id}">
+                            <svg class="w-5 h-5 text-gray-400 hover:text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z" />
+                            </svg>
+                          </button>
+                          <div class="dropdown-menu hidden absolute bg-white shadow-lg rounded-md py-1 mt-1 border border-blue-500" id="dropdown-${country.id}">
+                            <button class="updateCountryBtn block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
+                              data-id="${country.id}"
+                              data-country-name="${country.countryName || ""}"
+                              data-country-code="${country.countryCode || ""}"
+                              data-iso-code="${country.countryIsoCode || ""}"
+                              data-dial-code="${country.dialCode || ""}"
+                              data-currency-code="${country.currencyCode || ""}"
+                              data-currency-symbol="${country.currencySymbol || ""}"
+                              data-mobile-length="${country.mobileLength || ""}"
+                              data-bill-payment="${country.billPaymentSupported || false}"
+                              data-offline-payment="${country.offlinePaymentSupported || false}"
+                              data-status="${country.status || ""}">
+                              Update
+                            </button>
+                            <button class="deleteCountryBtn block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
+                              data-id="${country.id}">
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+              </div>
+            `;
+            attachCountriesManagementEventListeners();
+          }
+        } catch (error) {
+          console.error("Fetch countries error:", error);
+          showError(error.message);
+          list.innerHTML = "<p>Failed to load countries.</p>";
+        }
+      }
+
+      // attachCountriesManagementEventListeners updated
+      function attachCountriesManagementEventListeners() {
+        const actionButtons = document.querySelectorAll(".actionBtn");
+        console.log("Action buttons found:", actionButtons.length);
+        
+        actionButtons.forEach(btn => {
+          btn.removeEventListener("click", handleActionClick);
+          btn.addEventListener("click", handleActionClick);
+        });
+
+        function handleActionClick(e) {
+          e.stopPropagation();
+          const dropdown = e.currentTarget.nextElementSibling;
+          console.log("Action button clicked, dropdown:", dropdown);
+          
+          const isVisible = !dropdown.classList.contains("hidden");
+          document.querySelectorAll(".dropdown-menu").forEach(d => {
+            d.classList.add("hidden");
+            d.style.display = "none";
+            d.style.zIndex = "";
+          });
+
+          if (!isVisible) {
+            dropdown.classList.remove("hidden");
+            dropdown.style.display = "block";
+            dropdown.style.zIndex = "300";
+            positionDropdown(e.currentTarget, dropdown);
+            console.log("Dropdown shown:", 
+              "display:", dropdown.style.display, 
+              "zIndex:", dropdown.style.zIndex, 
+              "top:", dropdown.style.top, 
+              "left:", dropdown.style.left,
+              "computed display:", getComputedStyle(dropdown).display
+            );
+          }
+        }
+
+        document.querySelectorAll(".updateCountryBtn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            console.log("Update button clicked, id:", btn.dataset.id);
+            document.getElementById("updateCountryId").value = btn.dataset.id;
+            document.getElementById("updateCountryName").value = btn.dataset.countryName;
+            document.getElementById("updateCountryCode").value = btn.dataset.countryCode;
+            document.getElementById("updateCountryIsoCode").value = btn.dataset.isoCode;
+            document.getElementById("updateDialCode").value = btn.dataset.dialCode;
+            document.getElementById("updateCurrencyCode").value = btn.dataset.currencyCode;
+            document.getElementById("updateCurrencySymbol").value = btn.dataset.currencySymbol;
+            document.getElementById("updateMobileLength").value = btn.dataset.mobileLength;
+            document.getElementById("updateBillPaymentSupported").checked = btn.dataset.billPayment === "true";
+            document.getElementById("updateOfflinePaymentSupported").checked = btn.dataset.offlinePayment === "true";
+            document.getElementById("updateCountryStatus").value = btn.dataset.status;
+            showModal("updateCountryModal");
+          });
+        });
+
+        document.querySelectorAll(".deleteCountryBtn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            console.log("Delete button clicked, id:", btn.dataset.id);
+            document.getElementById("deleteCountryId").value = btn.dataset.id;
+            showModal("deleteCountryModal");
+          });
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!e.target.closest(".actionBtn")) {
+            document.querySelectorAll(".dropdown-menu").forEach(dropdown => {
+              dropdown.classList.add("hidden");
+              dropdown.style.display = "none";
+              dropdown.style.zIndex = "";
+            });
+          }
+        });
+      }
+
+      
+
       // Form Submissions
       function setupForms() {
         // Add Provider
@@ -4088,6 +4643,118 @@
               "PUT"
             );
           });
+
+        // Add Country Form
+        document
+          .getElementById("addCountryForm")
+          ?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const payload = {
+              countryName: document.getElementById("countryName").value.trim(),
+              countryCode: document.getElementById("countryCode").value.trim(),
+              countryIsoCode: document
+                .getElementById("countryIsoCode")
+                .value.trim(),
+              dialCode: document.getElementById("dialCode").value.trim(),
+              currencyCode: document
+                .getElementById("currencyCode")
+                .value.trim(),
+              currencySymbol: document
+                .getElementById("currencySymbol")
+                .value.trim(),
+              mobileLength:
+                document.getElementById("mobileLength").value.trim() || null,
+              billPaymentSupported: document.getElementById(
+                "billPaymentSupported"
+              ).checked,
+              offlinePaymentSupported: document.getElementById(
+                "offlinePaymentSupported"
+              ).checked,
+              status:
+                document.getElementById("countryStatus").value || "Active",
+            };
+            console.log("Submitting add country payload:", payload);
+            await submitForm(
+              "http://45.91.171.213:9080/api/manage/service/countries/create",
+              payload,
+              "addCountryModal",
+              fetchCountriesManagementData,
+              "Country"
+            );
+          });
+
+        // Update Country Form
+        document
+          .getElementById("updateCountryForm")
+          ?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const payload = {
+              id: parseInt(document.getElementById("updateCountryId").value),
+              countryName: document
+                .getElementById("updateCountryName")
+                .value.trim(),
+              countryCode: document
+                .getElementById("updateCountryCode")
+                .value.trim(),
+              countryIsoCode: document
+                .getElementById("updateCountryIsoCode")
+                .value.trim(),
+              dialCode: document.getElementById("updateDialCode").value.trim(),
+              currencyCode: document
+                .getElementById("updateCurrencyCode")
+                .value.trim(),
+              currencySymbol: document
+                .getElementById("updateCurrencySymbol")
+                .value.trim(),
+              mobileLength:
+                document.getElementById("updateMobileLength").value.trim() ||
+                null,
+              billPaymentSupported: document.getElementById(
+                "updateBillPaymentSupported"
+              ).checked,
+              offlinePaymentSupported: document.getElementById(
+                "updateOfflinePaymentSupported"
+              ).checked,
+              status: document.getElementById("updateCountryStatus").value,
+            };
+            console.log("Submitting update country payload:", payload);
+            await submitForm(
+              "http://45.91.171.213:9080/api/manage/service/countries/update",
+              payload,
+              "updateCountryModal",
+              fetchCountriesManagementData,
+              "Country",
+              "updated",
+              "PUT"
+            );
+          });
+
+        // Delete Country Confirmation
+        document
+          .getElementById("confirmDeleteCountryBtn")
+          ?.addEventListener("click", async () => {
+            const id = document.getElementById("deleteCountryId").value;
+            try {
+              const response = await fetch(
+                `http://45.91.171.213:9080/api/manage/service/countries/${id}`,
+                {
+                  method: "DELETE",
+                  headers: { Authorization: `Bearer ${token}` },
+                }
+              );
+              const responseText = await response.text();
+              console.log("Delete country response:", responseText);
+              if (!response.ok) {
+                throw new Error(responseText || "Failed to delete country");
+              }
+              hideModal("deleteCountryModal");
+              showSuccess("Country deleted successfully!");
+              fetchCountriesManagementData();
+            } catch (error) {
+              console.error("Delete country error:", error);
+              showError(error.message);
+            }
+          });
       }
 
       async function submitForm(
@@ -4424,6 +5091,15 @@
         document
           .getElementById("cancelUpdateUserBtn")
           ?.addEventListener("click", () => hideModal("updateUserModal"));
+        document
+          .getElementById("cancelAddCountryBtn")
+          ?.addEventListener("click", () => hideModal("addCountryModal"));
+        document
+          .getElementById("cancelUpdateCountryBtn")
+          ?.addEventListener("click", () => hideModal("updateCountryModal"));
+        document
+          .getElementById("cancelDeleteCountryBtn")
+          ?.addEventListener("click", () => hideModal("deleteCountryModal"));
       }
     </script>
   </body>
